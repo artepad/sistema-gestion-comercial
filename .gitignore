@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Configuraciones locales
+*.ini
+config.local.py
+
+# Archivos temporales
+*.tmp
+*.bak
+*.backup
+nul
+
+# Base de datos de productos (opcional: comentar si quieres versionar)
+# gestion_comercial/bd/*.xlsx
+
+# Archivos de datos sensibles
+gestion_comercial/bd/productos_real.xlsx
+gestion_comercial/bd/backup/

@@ -1,0 +1,12 @@
+# ============================================================================
+# Dependencias - Sistema de Gestión Comercial
+# ============================================================================
+
+# Interfaz gráfica (viene con Python)
+# tkinter - incluido en Python
+
+# Manejo de archivos Excel
+openpyxl>=3.1.0
+
+# Para crear el ejecutable (solo necesario para desarrollo)
+pyinstaller>=6.0.0

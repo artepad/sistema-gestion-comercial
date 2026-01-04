@@ -1,0 +1,3 @@
+"""
+Cash Counter module.
+"""

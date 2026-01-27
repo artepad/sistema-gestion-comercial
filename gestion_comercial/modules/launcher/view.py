@@ -79,14 +79,6 @@ class LauncherView(tk.Frame):
         apps_container = tk.Frame(self, bg=Theme.BACKGROUND)
         apps_container.pack(fill='both', expand=True, padx=80, pady=(10, 20))
 
-        tk.Label(
-            apps_container,
-            text="Selecciona una aplicación",
-            font=Theme.FONTS['h2'],
-            bg=Theme.BACKGROUND,
-            fg=Theme.TEXT_PRIMARY
-        ).pack(pady=(0, 20))
-
         # Container vertical centrado para botones
         buttons_container = tk.Frame(apps_container, bg=Theme.BACKGROUND)
         buttons_container.pack(expand=True)
@@ -99,6 +91,9 @@ class LauncherView(tk.Frame):
 
         # Lector de Precios
         self.create_price_reader_button(buttons_container)
+
+        # Comparador de Precios
+        self.create_price_comparator_button(buttons_container)
 
     def create_tag_manager_button(self, parent):
         """Crea el botón de Gestor de Etiquetas."""
@@ -319,6 +314,85 @@ class LauncherView(tk.Frame):
 
         # Hacer clickeable
         command = lambda: self.navigator.show_view('price_reader')
+        widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
+        for widget in widgets:
+            widget.bind('<Button-1>', lambda e: command())
+            widget.config(cursor='hand2')
+
+        # Efectos hover
+        def on_enter(e):
+            button_frame.configure(highlightbackground=color, highlightthickness=3, bg='#f8f9fa')
+            inner_frame.configure(bg='#f8f9fa')
+            icon_label.configure(bg='#f8f9fa')
+            title_label.configure(bg='#f8f9fa')
+            shadow.place(x=4, y=4, relwidth=1, relheight=1)
+
+        def on_leave(e):
+            button_frame.configure(highlightbackground='#dde1e6', highlightthickness=2, bg='white')
+            inner_frame.configure(bg='white')
+            icon_label.configure(bg='white')
+            title_label.configure(bg='white')
+            shadow.place(x=2, y=2, relwidth=1, relheight=1)
+
+        for widget in widgets:
+            widget.bind("<Enter>", on_enter)
+            widget.bind("<Leave>", on_leave)
+
+    def create_price_comparator_button(self, parent):
+        """Crea el botón de Comparador de Precios."""
+        color = '#9b59b6'
+
+        # Container principal con sombra
+        button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
+        button_container.pack(pady=8)
+
+        # Sombra
+        shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
+        shadow.place(x=2, y=2, relwidth=1, relheight=1)
+
+        # Botón principal rectangular
+        button_frame = tk.Frame(
+            button_container,
+            bg='white',
+            bd=0,
+            highlightthickness=2,
+            highlightbackground='#dde1e6',
+            highlightcolor=color
+        )
+        button_frame.pack()
+
+        # Frame interior con padding
+        inner_frame = tk.Frame(button_frame, bg='white')
+        inner_frame.pack(fill='both', expand=True, padx=25, pady=18)
+
+        # Icono a la izquierda
+        icon_label = tk.Label(
+            inner_frame,
+            text="⚖️",
+            font=(Theme.FONT_FAMILY, 22),
+            bg='white',
+            fg=color,
+            width=2
+        )
+        icon_label.pack(side='left', padx=(0, 62))
+
+        # Título
+        title_label = tk.Label(
+            inner_frame,
+            text="Comparador de Precios",
+            font=(Theme.FONT_FAMILY, 14, 'bold'),
+            bg='white',
+            fg=Theme.TEXT_PRIMARY,
+            anchor='w'
+        )
+        title_label.pack(side='left', fill='both', expand=True)
+
+        # Tamaño fijo
+        button_frame.config(width=420, height=77)
+        button_frame.pack_propagate(False)
+
+        # Hacer clickeable
+        command = lambda: self.navigator.show_view('price_comparator')
         widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
         for widget in widgets:
             widget.bind('<Button-1>', lambda e: command())

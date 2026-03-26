@@ -19,6 +19,9 @@ class CashCounterView(tk.Frame):
         self.setup_ui()
         
     def setup_ui(self):
+        # Registrar validadores antes de crear widgets
+        self._register_validators()
+
         # Top green accent strip
         self.create_top_accent()
 
@@ -122,7 +125,8 @@ class CashCounterView(tk.Frame):
         )
         lbl_denom.grid(row=row, column=0, padx=5, pady=2, sticky='w')
 
-        entry = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG)
+        entry = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+                         validate='key', validatecommand=self._vcmd_int)
         entry.grid(row=row, column=1, padx=5, pady=2)
         entry.insert(0, "0")
         entry.bind('<KeyRelease>', lambda e, d=denom: self.on_bill_change(d))
@@ -181,14 +185,15 @@ class CashCounterView(tk.Frame):
         # Empty space for peso column (no weight for 500 peso coin)
         tk.Label(parent, text="", font=Theme.FONTS['body'], bg=Theme.COINS_BG).grid(row=row, column=1, pady=2)
 
-        entry = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG)
+        entry = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+                         validate='key', validatecommand=self._vcmd_int)
         entry.grid(row=row, column=2, padx=5, pady=2)
         entry.insert(0, "0")
         entry.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_qty_change(d))
         entry.bind('<FocusIn>', self.on_focus_in)
-        
+
         self.entries_coins_qty[denom] = entry
-        
+
         lbl_val = tk.Label(parent, text="$0", font=Theme.FONTS['body'], bg=Theme.COINS_BG)
         lbl_val.grid(row=row, column=3, pady=2)
         self.labels_coins_value[denom] = lbl_val
@@ -208,14 +213,16 @@ class CashCounterView(tk.Frame):
         )
         lbl_denom.grid(row=row, column=0, padx=5, pady=2, sticky='w')
 
-        entry_w = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG)
+        entry_w = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+                           validate='key', validatecommand=self._vcmd_decimal)
         entry_w.grid(row=row, column=1, padx=5, pady=2)
         entry_w.insert(0, "0")
         entry_w.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_weight_change(d))
         entry_w.bind('<FocusIn>', self.on_focus_in)
         self.entries_coins_weight[denom] = entry_w
 
-        entry_q = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG)
+        entry_q = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+                           validate='key', validatecommand=self._vcmd_int)
         entry_q.grid(row=row, column=2, padx=5, pady=2)
         entry_q.insert(0, "0")
         entry_q.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_qty_change(d))
@@ -303,6 +310,29 @@ class CashCounterView(tk.Frame):
         btn.bind("<Enter>", on_enter)
         btn.bind("<Leave>", on_leave)
 
+    # --- Validación de entrada ---
+
+    def _register_validators(self):
+        """Registra las funciones de validación para los Entry"""
+        self._vcmd_int = (self.register(self._validate_integer), '%P')
+        self._vcmd_decimal = (self.register(self._validate_decimal), '%P')
+
+    def _validate_integer(self, value_if_allowed):
+        """Solo permite dígitos (números enteros positivos) o vacío"""
+        if value_if_allowed == "":
+            return True
+        return value_if_allowed.isdigit()
+
+    def _validate_decimal(self, value_if_allowed):
+        """Solo permite dígitos y coma como separador decimal"""
+        if value_if_allowed == "":
+            return True
+        # Permitir dígitos y máximo una coma
+        if value_if_allowed.count(',') > 1:
+            return False
+        cleaned = value_if_allowed.replace(',', '')
+        return cleaned.isdigit()
+
     # Logic Handlers
     def on_focus_in(self, event):
         if event.widget.get() == "0":
@@ -319,9 +349,10 @@ class CashCounterView(tk.Frame):
 
     def on_coin_weight_change(self, denom):
         if self.calculating.get(denom): return
-        
+
         try:
-            weight = float(self.entries_coins_weight[denom].get() or 0)
+            raw_weight = self.entries_coins_weight[denom].get() or "0"
+            weight = float(raw_weight.replace(',', '.'))
             qty, val = self.model.calculate_coin_from_weight(denom, weight)
             
             self.calculating[denom] = True
@@ -344,7 +375,8 @@ class CashCounterView(tk.Frame):
             if denom in self.entries_coins_weight:
                 self.calculating[denom] = True
                 self.entries_coins_weight[denom].delete(0, tk.END)
-                self.entries_coins_weight[denom].insert(0, f"{weight:.3f}")
+                weight_str = f"{weight:.3f}".replace('.', ',')
+                self.entries_coins_weight[denom].insert(0, weight_str)
                 self.calculating[denom] = False
                 
             self.labels_coins_value[denom].config(text=f"${self.format_number(val)}")

@@ -15,26 +15,21 @@ class TagManagerView(tk.Frame):
         self.product_entries = []
         self.price_entries = []
 
-        # Listas para pestaña de etiquetas de oferta
-        # Oferta Normal
-        self.normal_offer_product = None
-        self.normal_offer_price_before = None
-        self.normal_offer_price_now = None
+        # Sistema dinámico de ofertas
+        self.offer_queue = []          # Lista de dicts (max 4), formato compatible con model
+        self.current_offer_type = None
+        self.form_frames = {}          # {'normal': Frame, ...}
+        self.form_entries = {}         # {'normal': {'product': Entry, ...}, ...}
+        self.type_buttons = {}         # {'normal': Button, ...}
+        self.slot_cards = []           # 4 frames para visualizar la cola
 
-        # Oferta con Porcentaje
-        self.percent_offer_product = None
-        self.percent_offer_price_before = None
-        self.percent_offer_price_now = None
-        self.percent_offer_combo = None
-
-        # Oferta por Cantidad
-        self.quantity_offer_product = None
-        self.quantity_offer_quantity = None
-        self.quantity_offer_price = None
-
-        # Producto del Día
-        self.daily_offer_product = None
-        self.daily_offer_price = None
+        # Configuración de tipos de oferta
+        self.offer_types = {
+            'normal': {'label': 'Oferta Normal', 'color': '#e74c3c', 'icon': '🏷️'},
+            'percentage': {'label': 'Oferta %', 'color': '#f39c12', 'icon': '💯'},
+            'quantity': {'label': 'x Cantidad', 'color': '#9b59b6', 'icon': '📦'},
+            'daily': {'label': 'Prod. del Día', 'color': '#3498db', 'icon': '⭐'},
+        }
 
         self.setup_ui()
         
@@ -133,339 +128,714 @@ class TagManagerView(tk.Frame):
         self.create_button_panel(parent)
 
     def create_offer_tags_content(self, parent):
-        """Crea el contenido de la pestaña de etiquetas de oferta con 4 tipos"""
-        # Contenedor principal centrado
+        """Crea el contenido dinámico de la pestaña de etiquetas de oferta"""
         main_container = tk.Frame(parent, bg=Theme.BACKGROUND)
         main_container.pack(expand=True, fill='both')
 
-        # Contenedor centrado para las secciones
-        content_frame = tk.Frame(main_container, bg=Theme.BACKGROUND)
-        content_frame.place(relx=0.5, rely=0.5, anchor='center')
+        # Botones al fondo (se empaquetan primero con side='bottom')
+        self.create_offer_button_panel(main_container)
 
-        # Crear las 4 secciones de ofertas
-        self.create_normal_offer_section(content_frame)
-        self.create_percent_offer_section(content_frame)
-        self.create_quantity_offer_section(content_frame)
-        self.create_daily_offer_section(content_frame)
+        # Contenido principal (se expande en el espacio restante)
+        content_area = tk.Frame(main_container, bg=Theme.BACKGROUND)
+        content_area.pack(expand=True, fill='both', pady=(5, 0))
 
-        # Espacio antes de los botones
-        tk.Frame(content_frame, bg=Theme.BACKGROUND, height=10).pack()
+        # === ZONA 1: Selector de tipo de oferta ===
+        self.create_offer_type_selector(content_area)
 
-        # Botones al final
-        self.create_offer_button_panel(content_frame)
+        # === ZONA 2: Formulario dinámico ===
+        self.create_dynamic_form_area(content_area)
 
-    def create_section_frame(self, parent, title, color):
-        """Crea un frame de sección con título"""
-        section = tk.LabelFrame(
+        # === ZONA 3: Cola de ofertas ===
+        self.create_offer_queue_display(content_area)
+
+        # Seleccionar el primer tipo por defecto
+        self.select_offer_type('normal')
+
+    # --- ZONA 1: Selector de tipo ---
+
+    def create_offer_type_selector(self, parent):
+        """Crea la fila de botones para seleccionar el tipo de oferta"""
+        selector_frame = tk.Frame(parent, bg=Theme.BACKGROUND)
+        selector_frame.pack(fill='x', pady=(8, 12))
+
+        # Título con estilo consistente
+        tk.Label(
+            selector_frame,
+            text="Seleccione el tipo de oferta:",
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg='#6b7280'
+        ).pack(anchor='w', pady=(0, 8))
+
+        # Frame para los botones centrados
+        buttons_frame = tk.Frame(selector_frame, bg=Theme.BACKGROUND)
+        buttons_frame.pack(anchor='w')
+
+        for type_key, config in self.offer_types.items():
+            btn = tk.Button(
+                buttons_frame,
+                text=f"{config['icon']}  {config['label']}",
+                font=(Theme.FONT_FAMILY, 10, 'bold'),
+                bg='white',
+                fg=config['color'],
+                relief='flat',
+                bd=0,
+                padx=16,
+                pady=8,
+                cursor='hand2',
+                highlightthickness=1,
+                highlightbackground='#e5e7eb',
+                activebackground=config['color'],
+                activeforeground='white',
+                command=lambda k=type_key: self.select_offer_type(k)
+            )
+            btn.pack(side='left', padx=(0, 10))
+            self.type_buttons[type_key] = btn
+
+            # Hover
+            color = config['color']
+            def on_enter(e, b=btn, c=color, k=type_key):
+                if self.current_offer_type != k:
+                    b.configure(bg=c, fg='white')
+            def on_leave(e, b=btn, c=color, k=type_key):
+                if self.current_offer_type != k:
+                    b.configure(bg='white', fg=c)
+            btn.bind("<Enter>", on_enter)
+            btn.bind("<Leave>", on_leave)
+
+    def select_offer_type(self, type_key):
+        """Selecciona un tipo de oferta y muestra su formulario"""
+        self.current_offer_type = type_key
+
+        # Actualizar botones
+        for key, btn in self.type_buttons.items():
+            config = self.offer_types[key]
+            if key == type_key:
+                btn.configure(bg=config['color'], fg='white',
+                              highlightthickness=2, highlightbackground=config['color'])
+            else:
+                btn.configure(bg='white', fg=config['color'],
+                              highlightthickness=1, highlightbackground='#e5e7eb')
+
+        # Actualizar borde del formulario con el color del tipo
+        color = self.offer_types[type_key]['color']
+        self.form_outer.configure(highlightbackground=color, highlightthickness=2)
+
+        # Mostrar formulario correspondiente
+        self.form_frames[type_key].tkraise()
+
+    # --- ZONA 2: Formulario dinámico ---
+
+    def create_dynamic_form_area(self, parent):
+        """Crea el contenedor con los 4 formularios apilados"""
+        # Contenedor con borde coloreado
+        self.form_outer = tk.Frame(
             parent,
-            text=title,
-            font=(Theme.FONT_FAMILY, 11, 'bold'),
             bg='white',
-            fg=color,
-            relief='solid',
-            bd=1,
+            highlightbackground='#e5e7eb',
+            highlightthickness=2,
             padx=20,
-            pady=10
+            pady=12
         )
-        section.pack(fill='x', padx=0, pady=8)
-        return section
+        self.form_outer.pack(fill='x', pady=(0, 15))
 
-    def create_normal_offer_section(self, parent):
-        """Sección 1: Oferta Normal (Precio Antes/Ahora)"""
-        section = self.create_section_frame(parent, "1. Oferta Normal", '#e74c3c')
+        # Contenedor interno para apilar formularios con grid
+        self.form_container = tk.Frame(self.form_outer, bg='white')
+        self.form_container.pack(fill='x')
+        self.form_container.grid_rowconfigure(0, weight=1)
+        self.form_container.grid_columnconfigure(0, weight=1)
+
+        # Crear los 4 formularios apilados
+        self.create_normal_offer_form()
+        self.create_percent_offer_form()
+        self.create_quantity_offer_form()
+        self.create_daily_offer_form()
+
+    def _styled_entry(self, parent, width=None, **kwargs):
+        """Crea un Entry con estilo consistente (bordes suaves)"""
+        config = {
+            'font': (Theme.FONT_FAMILY, 10),
+            'bg': 'white',
+            'relief': 'flat',
+            'bd': 1,
+            'highlightthickness': 1,
+            'highlightbackground': '#e5e7eb',
+            'highlightcolor': '#3498db',
+        }
+        if width:
+            config['width'] = width
+        config.update(kwargs)
+        entry = tk.Entry(parent, **config)
+        return entry
+
+    def create_normal_offer_form(self):
+        """Formulario: Oferta Normal (Precio Antes/Ahora)"""
+        frame = tk.Frame(self.form_container, bg='white')
+        frame.grid(row=0, column=0, sticky='nsew')
+
+        self._form_title(frame, "Oferta Normal", '#e74c3c',
+                         "Muestra precio anterior tachado y precio actual")
 
         # Fila 1: Producto
-        row1 = tk.Frame(section, bg='white')
-        row1.pack(fill='x', pady=(5, 8))
-
-        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10), bg='white', width=12, anchor='w').pack(side='left')
-        self.normal_offer_product = tk.Entry(row1, font=(Theme.FONT_FAMILY, 10))
-        self.normal_offer_product.pack(side='left', fill='x', expand=True, padx=(0, 5))
+        row1 = tk.Frame(frame, bg='white')
+        row1.pack(fill='x', pady=(10, 8))
+        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#495057', width=12, anchor='w').pack(side='left')
+        product_entry = self._styled_entry(row1)
+        product_entry.pack(side='left', fill='x', expand=True, ipady=4)
 
         # Fila 2: Precios
-        row2 = tk.Frame(section, bg='white')
-        row2.pack(fill='x', pady=(0, 5))
+        row2 = tk.Frame(frame, bg='white')
+        row2.pack(fill='x', pady=(0, 8))
 
-        # Precio Antes
-        tk.Label(row2, text="Precio Antes:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#e74c3c', width=12, anchor='w').pack(side='left')
-        price_before_frame = tk.Frame(row2, bg='white')
-        price_before_frame.pack(side='left', padx=(0, 20))
-        tk.Label(price_before_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#e74c3c').pack(side='left')
-        self.normal_offer_price_before = tk.Entry(price_before_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.normal_offer_price_before.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio Antes:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#e74c3c', width=12, anchor='w').pack(side='left')
+        pf1 = tk.Frame(row2, bg='white')
+        pf1.pack(side='left', padx=(0, 25))
+        tk.Label(pf1, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#e74c3c').pack(side='left')
+        price_before = self._styled_entry(pf1, width=12)
+        price_before.pack(side='left', padx=(4, 0), ipady=4)
 
-        # Precio Ahora
-        tk.Label(row2, text="Precio Ahora:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#27ae60', width=12, anchor='w').pack(side='left')
-        price_now_frame = tk.Frame(row2, bg='white')
-        price_now_frame.pack(side='left')
-        tk.Label(price_now_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#27ae60').pack(side='left')
-        self.normal_offer_price_now = tk.Entry(price_now_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.normal_offer_price_now.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio Ahora:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#27ae60', width=12, anchor='w').pack(side='left')
+        pf2 = tk.Frame(row2, bg='white')
+        pf2.pack(side='left')
+        tk.Label(pf2, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#27ae60').pack(side='left')
+        price_now = self._styled_entry(pf2, width=12)
+        price_now.pack(side='left', padx=(4, 0), ipady=4)
 
-    def create_percent_offer_section(self, parent):
-        """Sección 2: Oferta con Porcentaje"""
-        section = self.create_section_frame(parent, "2. Oferta con Porcentaje", '#f39c12')
+        self._add_button(frame)
+
+        self.form_frames['normal'] = frame
+        self.form_entries['normal'] = {
+            'product': product_entry,
+            'price_before': price_before,
+            'price_now': price_now
+        }
+
+    def create_percent_offer_form(self):
+        """Formulario: Oferta con Porcentaje"""
+        frame = tk.Frame(self.form_container, bg='white')
+        frame.grid(row=0, column=0, sticky='nsew')
+
+        self._form_title(frame, "Oferta con Porcentaje", '#f39c12',
+                         "Muestra descuento porcentual y precios antes/ahora")
 
         # Fila 1: Producto y Descuento
-        row1 = tk.Frame(section, bg='white')
-        row1.pack(fill='x', pady=(5, 8))
+        row1 = tk.Frame(frame, bg='white')
+        row1.pack(fill='x', pady=(10, 8))
+        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#495057', width=12, anchor='w').pack(side='left')
+        product_entry = self._styled_entry(row1, width=28)
+        product_entry.pack(side='left', padx=(0, 25), ipady=4)
 
-        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10), bg='white', width=12, anchor='w').pack(side='left')
-        self.percent_offer_product = tk.Entry(row1, font=(Theme.FONT_FAMILY, 10), width=35)
-        self.percent_offer_product.pack(side='left', padx=(0, 20))
-
-        tk.Label(row1, text="Descuento:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#f39c12').pack(side='left')
-        self.percent_offer_combo = ttk.Combobox(
+        tk.Label(row1, text="Descuento:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#f39c12').pack(side='left')
+        combo = ttk.Combobox(
             row1,
             values=['5%', '10%', '15%', '20%', '30%', '40%', '50%'],
             state='readonly',
             font=(Theme.FONT_FAMILY, 10),
             width=8
         )
-        self.percent_offer_combo.pack(side='left', padx=(5, 0))
-        self.percent_offer_combo.set('10%')
+        combo.pack(side='left', padx=(5, 0))
+        combo.set('10%')
 
         # Fila 2: Precios
-        row2 = tk.Frame(section, bg='white')
-        row2.pack(fill='x', pady=(0, 5))
+        row2 = tk.Frame(frame, bg='white')
+        row2.pack(fill='x', pady=(0, 8))
 
-        # Precio Antes
-        tk.Label(row2, text="Precio Antes:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#e74c3c', width=12, anchor='w').pack(side='left')
-        price_before_frame = tk.Frame(row2, bg='white')
-        price_before_frame.pack(side='left', padx=(0, 20))
-        tk.Label(price_before_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#e74c3c').pack(side='left')
-        self.percent_offer_price_before = tk.Entry(price_before_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.percent_offer_price_before.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio Antes:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#e74c3c', width=12, anchor='w').pack(side='left')
+        pf1 = tk.Frame(row2, bg='white')
+        pf1.pack(side='left', padx=(0, 25))
+        tk.Label(pf1, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#e74c3c').pack(side='left')
+        price_before = self._styled_entry(pf1, width=12)
+        price_before.pack(side='left', padx=(4, 0), ipady=4)
 
-        # Precio Ahora
-        tk.Label(row2, text="Precio Ahora:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#27ae60', width=12, anchor='w').pack(side='left')
-        price_now_frame = tk.Frame(row2, bg='white')
-        price_now_frame.pack(side='left')
-        tk.Label(price_now_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#27ae60').pack(side='left')
-        self.percent_offer_price_now = tk.Entry(price_now_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.percent_offer_price_now.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio Ahora:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#27ae60', width=12, anchor='w').pack(side='left')
+        pf2 = tk.Frame(row2, bg='white')
+        pf2.pack(side='left')
+        tk.Label(pf2, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#27ae60').pack(side='left')
+        price_now = self._styled_entry(pf2, width=12)
+        price_now.pack(side='left', padx=(4, 0), ipady=4)
 
-    def create_quantity_offer_section(self, parent):
-        """Sección 3: Oferta por Cantidad (3x$1000)"""
-        section = self.create_section_frame(parent, "3. Oferta por Cantidad", '#9b59b6')
+        self._add_button(frame)
+
+        self.form_frames['percentage'] = frame
+        self.form_entries['percentage'] = {
+            'product': product_entry,
+            'price_before': price_before,
+            'price_now': price_now,
+            'combo': combo
+        }
+
+    def create_quantity_offer_form(self):
+        """Formulario: Oferta por Cantidad"""
+        frame = tk.Frame(self.form_container, bg='white')
+        frame.grid(row=0, column=0, sticky='nsew')
+
+        self._form_title(frame, "Oferta por Cantidad", '#9b59b6',
+                         "Formato: 3 x $1.000 (cantidad por precio total)")
 
         # Fila 1: Producto
-        row1 = tk.Frame(section, bg='white')
-        row1.pack(fill='x', pady=(5, 8))
-
-        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10), bg='white', width=12, anchor='w').pack(side='left')
-        self.quantity_offer_product = tk.Entry(row1, font=(Theme.FONT_FAMILY, 10))
-        self.quantity_offer_product.pack(side='left', fill='x', expand=True, padx=(0, 5))
+        row1 = tk.Frame(frame, bg='white')
+        row1.pack(fill='x', pady=(10, 8))
+        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#495057', width=12, anchor='w').pack(side='left')
+        product_entry = self._styled_entry(row1)
+        product_entry.pack(side='left', fill='x', expand=True, ipady=4)
 
         # Fila 2: Cantidad y Precio
-        row2 = tk.Frame(section, bg='white')
-        row2.pack(fill='x', pady=(0, 5))
+        row2 = tk.Frame(frame, bg='white')
+        row2.pack(fill='x', pady=(0, 8))
 
-        # Cantidad
-        tk.Label(row2, text="Cantidad:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#9b59b6', width=12, anchor='w').pack(side='left')
-        self.quantity_offer_quantity = tk.Entry(row2, font=(Theme.FONT_FAMILY, 10), width=10)
-        self.quantity_offer_quantity.pack(side='left', padx=(0, 20))
-        self.quantity_offer_quantity.insert(0, "3")
+        tk.Label(row2, text="Cantidad:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#9b59b6', width=12, anchor='w').pack(side='left')
+        quantity_entry = self._styled_entry(row2, width=10)
+        quantity_entry.pack(side='left', padx=(0, 25), ipady=4)
+        quantity_entry.insert(0, "3")
 
-        # Precio Total
-        tk.Label(row2, text="Precio Total:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#9b59b6', width=12, anchor='w').pack(side='left')
-        price_frame = tk.Frame(row2, bg='white')
-        price_frame.pack(side='left')
-        tk.Label(price_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#9b59b6').pack(side='left')
-        self.quantity_offer_price = tk.Entry(price_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.quantity_offer_price.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio Total:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#9b59b6', width=12, anchor='w').pack(side='left')
+        pf = tk.Frame(row2, bg='white')
+        pf.pack(side='left')
+        tk.Label(pf, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#9b59b6').pack(side='left')
+        price_entry = self._styled_entry(pf, width=12)
+        price_entry.pack(side='left', padx=(4, 0), ipady=4)
 
-    def create_daily_offer_section(self, parent):
-        """Sección 4: Producto del Día"""
-        section = self.create_section_frame(parent, "4. Producto del Día", '#3498db')
+        self._add_button(frame)
+
+        self.form_frames['quantity'] = frame
+        self.form_entries['quantity'] = {
+            'product': product_entry,
+            'quantity': quantity_entry,
+            'price': price_entry
+        }
+
+    def create_daily_offer_form(self):
+        """Formulario: Producto del Día"""
+        frame = tk.Frame(self.form_container, bg='white')
+        frame.grid(row=0, column=0, sticky='nsew')
+
+        self._form_title(frame, "Producto del Día", '#3498db',
+                         "Destaca un producto especial del día con su precio")
 
         # Fila 1: Producto
-        row1 = tk.Frame(section, bg='white')
-        row1.pack(fill='x', pady=(5, 8))
-
-        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10), bg='white', width=12, anchor='w').pack(side='left')
-        self.daily_offer_product = tk.Entry(row1, font=(Theme.FONT_FAMILY, 10))
-        self.daily_offer_product.pack(side='left', fill='x', expand=True, padx=(0, 5))
+        row1 = tk.Frame(frame, bg='white')
+        row1.pack(fill='x', pady=(10, 8))
+        tk.Label(row1, text="Producto:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#495057', width=12, anchor='w').pack(side='left')
+        product_entry = self._styled_entry(row1)
+        product_entry.pack(side='left', fill='x', expand=True, ipady=4)
 
         # Fila 2: Precio
-        row2 = tk.Frame(section, bg='white')
-        row2.pack(fill='x', pady=(0, 5))
+        row2 = tk.Frame(frame, bg='white')
+        row2.pack(fill='x', pady=(0, 8))
 
-        tk.Label(row2, text="Precio:", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#3498db', width=12, anchor='w').pack(side='left')
-        price_frame = tk.Frame(row2, bg='white')
-        price_frame.pack(side='left')
-        tk.Label(price_frame, text="$", font=(Theme.FONT_FAMILY, 10), bg='white', fg='#3498db').pack(side='left')
-        self.daily_offer_price = tk.Entry(price_frame, font=(Theme.FONT_FAMILY, 10), width=15)
-        self.daily_offer_price.pack(side='left', padx=(2, 0))
+        tk.Label(row2, text="Precio:", font=(Theme.FONT_FAMILY, 10),
+                 bg='white', fg='#3498db', width=12, anchor='w').pack(side='left')
+        pf = tk.Frame(row2, bg='white')
+        pf.pack(side='left')
+        tk.Label(pf, text="$", font=(Theme.FONT_FAMILY, 11, 'bold'),
+                 bg='white', fg='#3498db').pack(side='left')
+        price_entry = self._styled_entry(pf, width=12)
+        price_entry.pack(side='left', padx=(4, 0), ipady=4)
+
+        self._add_button(frame)
+
+        self.form_frames['daily'] = frame
+        self.form_entries['daily'] = {
+            'product': product_entry,
+            'price': price_entry
+        }
+
+    def _form_title(self, parent, title, color, description):
+        """Crea título y descripción para un formulario de oferta"""
+        # Separador visual superior
+        sep = tk.Frame(parent, bg=color, height=3)
+        sep.pack(fill='x', pady=(0, 8))
+
+        title_frame = tk.Frame(parent, bg='white')
+        title_frame.pack(fill='x', pady=(0, 2))
+        tk.Label(
+            title_frame, text=title,
+            font=(Theme.FONT_FAMILY, 13, 'bold'),
+            bg='white', fg=color
+        ).pack(side='left')
+        tk.Label(
+            title_frame, text=f"  —  {description}",
+            font=(Theme.FONT_FAMILY, 9),
+            bg='white', fg='#adb5bd'
+        ).pack(side='left')
+
+    def _add_button(self, parent):
+        """Crea el botón 'Agregar Oferta' dentro de un formulario"""
+        # Separador sutil
+        tk.Frame(parent, bg='#f0f0f0', height=1).pack(fill='x', pady=(8, 8))
+
+        btn_frame = tk.Frame(parent, bg='white')
+        btn_frame.pack(fill='x', pady=(0, 2))
+
+        btn = tk.Button(
+            btn_frame,
+            text="+ Agregar Oferta",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg='#27ae60',
+            fg='white',
+            relief='flat',
+            bd=0,
+            padx=20,
+            pady=7,
+            cursor='hand2',
+            activebackground='#1e8449',
+            activeforeground='white',
+            command=self.add_offer_to_queue
+        )
+        btn.pack(side='right')
+
+        def on_enter(e):
+            btn.configure(bg='#1e8449')
+        def on_leave(e):
+            btn.configure(bg='#27ae60')
+        btn.bind("<Enter>", on_enter)
+        btn.bind("<Leave>", on_leave)
+
+    # --- ZONA 3: Cola de ofertas ---
+
+    def create_offer_queue_display(self, parent):
+        """Crea la visualización de los 4 slots de la cola de ofertas"""
+        # Contenedor con estilo LabelFrame
+        queue_section = tk.LabelFrame(
+            parent,
+            text="  Ofertas en cola  ",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            relief='solid',
+            bd=1,
+            padx=15,
+            pady=10
+        )
+        queue_section.pack(fill='x', pady=(0, 0))
+
+        # Contador
+        self.queue_counter_label = tk.Label(
+            queue_section,
+            text="0 de 4 espacios utilizados",
+            font=(Theme.FONT_FAMILY, 9),
+            bg=Theme.BACKGROUND,
+            fg='#6b7280'
+        )
+        self.queue_counter_label.pack(anchor='w', pady=(0, 8))
+
+        # Frame para los 4 slot cards
+        self.cards_frame = tk.Frame(queue_section, bg=Theme.BACKGROUND)
+        self.cards_frame.pack(fill='x')
+
+        self.slot_cards = []
+        for i in range(4):
+            card = tk.Frame(
+                self.cards_frame,
+                bg='#f8f9fa',
+                highlightbackground='#dee2e6',
+                highlightthickness=1,
+                width=155,
+                height=80
+            )
+            card.pack(side='left', padx=(0, 10), expand=True)
+            card.pack_propagate(False)
+            self.slot_cards.append(card)
+
+        self.refresh_queue_display()
+
+    def refresh_queue_display(self):
+        """Actualiza la visualización de los 4 slots"""
+        count = len(self.offer_queue)
+        self.queue_counter_label.configure(
+            text=f"{count} de 4 espacios utilizados",
+            fg='#27ae60' if count > 0 else '#6b7280'
+        )
+
+        for i, card in enumerate(self.slot_cards):
+            # Limpiar contenido del card
+            for widget in card.winfo_children():
+                widget.destroy()
+
+            if i < len(self.offer_queue):
+                offer = self.offer_queue[i]
+                config = self.offer_types[offer['type']]
+                color = config['color']
+
+                card.configure(bg='white', highlightbackground=color, highlightthickness=2)
+
+                # Barra superior de color
+                color_bar = tk.Frame(card, bg=color, height=4)
+                color_bar.pack(fill='x')
+
+                # Contenido
+                content = tk.Frame(card, bg='white')
+                content.pack(fill='both', expand=True, padx=6, pady=3)
+
+                # Tipo + botón eliminar
+                top_row = tk.Frame(content, bg='white')
+                top_row.pack(fill='x')
+                tk.Label(
+                    top_row,
+                    text=f"{config['icon']} {config['label']}",
+                    font=(Theme.FONT_FAMILY, 8, 'bold'),
+                    bg='white', fg=color
+                ).pack(side='left')
+
+                remove_btn = tk.Label(
+                    top_row,
+                    text="✕",
+                    font=(Theme.FONT_FAMILY, 10, 'bold'),
+                    bg='white', fg='#adb5bd',
+                    cursor='hand2'
+                )
+                remove_btn.pack(side='right')
+                # Hover en el botón eliminar
+                remove_btn.bind("<Enter>", lambda e, b=remove_btn: b.configure(fg='#e74c3c'))
+                remove_btn.bind("<Leave>", lambda e, b=remove_btn: b.configure(fg='#adb5bd'))
+                remove_btn.bind("<Button-1>", lambda e, idx=i: self.remove_offer_from_queue(idx))
+
+                # Nombre del producto (truncado)
+                product_name = offer['product']
+                if len(product_name) > 18:
+                    product_name = product_name[:16] + "..."
+                tk.Label(
+                    content,
+                    text=product_name,
+                    font=(Theme.FONT_FAMILY, 8),
+                    bg='white', fg=Theme.TEXT_PRIMARY,
+                    anchor='w'
+                ).pack(fill='x')
+
+                # Detalle de precio
+                price_text = self._get_offer_price_text(offer)
+                tk.Label(
+                    content,
+                    text=price_text,
+                    font=(Theme.FONT_FAMILY, 9, 'bold'),
+                    bg='white', fg='#27ae60',
+                    anchor='w'
+                ).pack(fill='x')
+
+            else:
+                # Slot vacío
+                card.configure(bg='#f8f9fa', highlightbackground='#dee2e6', highlightthickness=1)
+                empty_frame = tk.Frame(card, bg='#f8f9fa')
+                empty_frame.place(relx=0.5, rely=0.5, anchor='center')
+                tk.Label(
+                    empty_frame,
+                    text=f"{i + 1}",
+                    font=(Theme.FONT_FAMILY, 14, 'bold'),
+                    bg='#f8f9fa', fg='#dee2e6'
+                ).pack()
+                tk.Label(
+                    empty_frame,
+                    text="Disponible",
+                    font=(Theme.FONT_FAMILY, 8),
+                    bg='#f8f9fa', fg='#bdc3c7'
+                ).pack()
+
+    def _get_offer_price_text(self, offer):
+        """Retorna texto resumen del precio de una oferta"""
+        t = offer['type']
+        if t == 'normal':
+            return f"${int(offer['price_before'])} → ${int(offer['price_now'])}"
+        elif t == 'percentage':
+            return f"{offer['percentage']} - ${int(offer['price_now'])}"
+        elif t == 'quantity':
+            return f"{offer['quantity']} x ${int(offer['price'])}"
+        elif t == 'daily':
+            return f"${int(offer['price'])}"
+        return ""
+
+    # --- Lógica de la cola ---
+
+    def add_offer_to_queue(self):
+        """Valida el formulario actual y agrega la oferta a la cola"""
+        if len(self.offer_queue) >= 4:
+            messagebox.showwarning("Cola llena", "Ya tiene 4 ofertas. Elimine una para agregar otra.")
+            return
+
+        offer = self._validate_current_form()
+        if offer:
+            self.offer_queue.append(offer)
+            self._clear_current_form()
+            self.refresh_queue_display()
+
+    def remove_offer_from_queue(self, index):
+        """Elimina una oferta de la cola por índice"""
+        if 0 <= index < len(self.offer_queue):
+            self.offer_queue.pop(index)
+            self.refresh_queue_display()
+
+    def _validate_current_form(self):
+        """Valida y retorna dict de oferta del formulario actual, o None si inválido"""
+        type_key = self.current_offer_type
+        entries = self.form_entries[type_key]
+
+        if type_key == 'normal':
+            product = entries['product'].get().strip()
+            pb = entries['price_before'].get().strip()
+            pn = entries['price_now'].get().strip()
+            if not product or not pb or not pn:
+                messagebox.showerror("Error", "Complete todos los campos de Oferta Normal")
+                return None
+            try:
+                return {
+                    'type': 'normal',
+                    'product': product,
+                    'price_before': float(pb),
+                    'price_now': float(pn)
+                }
+            except ValueError:
+                messagebox.showerror("Error", "Los precios deben ser números válidos")
+                return None
+
+        elif type_key == 'percentage':
+            product = entries['product'].get().strip()
+            pb = entries['price_before'].get().strip()
+            pn = entries['price_now'].get().strip()
+            percentage = entries['combo'].get()
+            if not product or not pb or not pn or not percentage:
+                messagebox.showerror("Error", "Complete todos los campos de Oferta con Porcentaje")
+                return None
+            try:
+                return {
+                    'type': 'percentage',
+                    'product': product,
+                    'price_before': float(pb),
+                    'price_now': float(pn),
+                    'percentage': percentage
+                }
+            except ValueError:
+                messagebox.showerror("Error", "Los precios deben ser números válidos")
+                return None
+
+        elif type_key == 'quantity':
+            product = entries['product'].get().strip()
+            quantity = entries['quantity'].get().strip()
+            price = entries['price'].get().strip()
+            if not product or not quantity or not price:
+                messagebox.showerror("Error", "Complete todos los campos de Oferta por Cantidad")
+                return None
+            try:
+                return {
+                    'type': 'quantity',
+                    'product': product,
+                    'quantity': quantity,
+                    'price': float(price)
+                }
+            except ValueError:
+                messagebox.showerror("Error", "El precio debe ser un número válido")
+                return None
+
+        elif type_key == 'daily':
+            product = entries['product'].get().strip()
+            price = entries['price'].get().strip()
+            if not product or not price:
+                messagebox.showerror("Error", "Complete todos los campos de Producto del Día")
+                return None
+            try:
+                return {
+                    'type': 'daily',
+                    'product': product,
+                    'price': float(price)
+                }
+            except ValueError:
+                messagebox.showerror("Error", "El precio debe ser un número válido")
+                return None
+
+        return None
+
+    def _clear_current_form(self):
+        """Limpia los campos del formulario actual"""
+        entries = self.form_entries[self.current_offer_type]
+        for key, widget in entries.items():
+            if key == 'combo':
+                widget.set('10%')
+            elif key == 'quantity':
+                widget.delete(0, tk.END)
+                widget.insert(0, "3")
+            else:
+                widget.delete(0, tk.END)
+
+    # --- Botones y acciones ---
 
     def create_offer_button_panel(self, parent):
-        """Crea el panel de botones para etiquetas de oferta"""
+        """Crea el panel de botones al fondo de la pestaña de oferta"""
         frame = tk.Frame(parent, bg=Theme.BACKGROUND)
-        frame.pack(pady=10)
+        frame.pack(side='bottom', fill='x', pady=(10, 5))
 
-        # Botón Volver (azul)
+        # Centrar los botones
+        btn_container = tk.Frame(frame, bg=Theme.BACKGROUND)
+        btn_container.pack()
+
         self.create_styled_button(
-            frame,
+            btn_container,
             text="⬅ Volver",
             command=lambda: self.navigator.show_view('launcher'),
             bg_color=Theme.TOTAL_FG,
             hover_color='#0d47a1'
         )
-
-        # Botón Generar Ofertas (naranja/rojo para destacar) - Texto más corto
         self.create_styled_button(
-            frame,
+            btn_container,
             text="Generar Ofertas",
             command=self.generate_offers,
-            bg_color='#e74c3c',
-            hover_color='#c0392b'
+            bg_color='#27ae60',
+            hover_color='#1e8449'
         )
-
-        # Botón Limpiar (gris)
         self.create_styled_button(
-            frame,
+            btn_container,
             text="Limpiar",
-            command=lambda: self.clear_offer_form(),
+            command=self.clear_offer_form,
             bg_color='#6c757d',
             hover_color='#5a6268'
         )
 
     def generate_offers(self):
-        """Genera las etiquetas de oferta en PDF"""
-        offers = []
-
-        # 1. Oferta Normal
-        if (self.normal_offer_product and self.normal_offer_product.get().strip() and
-            self.normal_offer_price_before and self.normal_offer_price_before.get().strip() and
-            self.normal_offer_price_now and self.normal_offer_price_now.get().strip()):
-
-            try:
-                price_before = float(self.normal_offer_price_before.get().strip())
-                price_now = float(self.normal_offer_price_now.get().strip())
-
-                offers.append({
-                    'type': 'normal',
-                    'product': self.normal_offer_product.get().strip(),
-                    'price_before': price_before,
-                    'price_now': price_now
-                })
-            except ValueError:
-                messagebox.showerror("Error", "Los precios de Oferta Normal deben ser números válidos")
-                return
-        else:
-            offers.append({'type': 'empty'})
-
-        # 2. Oferta con Porcentaje
-        if (self.percent_offer_product and self.percent_offer_product.get().strip() and
-            self.percent_offer_price_before and self.percent_offer_price_before.get().strip() and
-            self.percent_offer_price_now and self.percent_offer_price_now.get().strip() and
-            self.percent_offer_combo and self.percent_offer_combo.get()):
-
-            try:
-                price_before = float(self.percent_offer_price_before.get().strip())
-                price_now = float(self.percent_offer_price_now.get().strip())
-                percentage = self.percent_offer_combo.get()
-
-                offers.append({
-                    'type': 'percentage',
-                    'product': self.percent_offer_product.get().strip(),
-                    'price_before': price_before,
-                    'price_now': price_now,
-                    'percentage': percentage
-                })
-            except ValueError:
-                messagebox.showerror("Error", "Los precios de Oferta con Porcentaje deben ser números válidos")
-                return
-        else:
-            offers.append({'type': 'empty'})
-
-        # 3. Oferta por Cantidad
-        if (self.quantity_offer_product and self.quantity_offer_product.get().strip() and
-            self.quantity_offer_quantity and self.quantity_offer_quantity.get().strip() and
-            self.quantity_offer_price and self.quantity_offer_price.get().strip()):
-
-            try:
-                quantity = self.quantity_offer_quantity.get().strip()
-                price = float(self.quantity_offer_price.get().strip())
-
-                offers.append({
-                    'type': 'quantity',
-                    'product': self.quantity_offer_product.get().strip(),
-                    'quantity': quantity,
-                    'price': price
-                })
-            except ValueError:
-                messagebox.showerror("Error", "El precio de Oferta por Cantidad debe ser un número válido")
-                return
-        else:
-            offers.append({'type': 'empty'})
-
-        # 4. Producto del Día
-        if (self.daily_offer_product and self.daily_offer_product.get().strip() and
-            self.daily_offer_price and self.daily_offer_price.get().strip()):
-
-            try:
-                price = float(self.daily_offer_price.get().strip())
-
-                offers.append({
-                    'type': 'daily',
-                    'product': self.daily_offer_product.get().strip(),
-                    'price': price
-                })
-            except ValueError:
-                messagebox.showerror("Error", "El precio de Producto del Día debe ser un número válido")
-                return
-        else:
-            offers.append({'type': 'empty'})
-
-        # Validar que haya al menos una oferta válida
-        if all(o['type'] == 'empty' for o in offers):
-            messagebox.showwarning("Advertencia", "Debe completar al menos una oferta")
+        """Genera las etiquetas de oferta desde la cola"""
+        if not self.offer_queue:
+            messagebox.showwarning("Advertencia", "Agregue al menos una oferta a la cola")
             return
 
-        # Generar PDF
-        success, message = self.model.print_offers(offers)
+        # Completar con slots vacíos hasta 4
+        offers = list(self.offer_queue)
+        while len(offers) < 4:
+            offers.append({'type': 'empty'})
 
+        success, message = self.model.print_offers(offers)
         if success:
             messagebox.showinfo("Éxito", "Etiquetas de ofertas generadas correctamente")
         else:
             messagebox.showerror("Error", f"Error al generar etiquetas: {message}")
 
     def clear_offer_form(self):
-        """Limpia el formulario de ofertas"""
-        if messagebox.askyesno("Confirmar", "¿Limpiar todos los campos de ofertas?"):
-            # Limpiar Oferta Normal
-            if self.normal_offer_product:
-                self.normal_offer_product.delete(0, tk.END)
-            if self.normal_offer_price_before:
-                self.normal_offer_price_before.delete(0, tk.END)
-            if self.normal_offer_price_now:
-                self.normal_offer_price_now.delete(0, tk.END)
-
-            # Limpiar Oferta con Porcentaje
-            if self.percent_offer_product:
-                self.percent_offer_product.delete(0, tk.END)
-            if self.percent_offer_price_before:
-                self.percent_offer_price_before.delete(0, tk.END)
-            if self.percent_offer_price_now:
-                self.percent_offer_price_now.delete(0, tk.END)
-            if self.percent_offer_combo:
-                self.percent_offer_combo.set('10%')
-
-            # Limpiar Oferta por Cantidad
-            if self.quantity_offer_product:
-                self.quantity_offer_product.delete(0, tk.END)
-            if self.quantity_offer_quantity:
-                self.quantity_offer_quantity.delete(0, tk.END)
-                self.quantity_offer_quantity.insert(0, "3")
-            if self.quantity_offer_price:
-                self.quantity_offer_price.delete(0, tk.END)
-
-            # Limpiar Producto del Día
-            if self.daily_offer_product:
-                self.daily_offer_product.delete(0, tk.END)
-            if self.daily_offer_price:
-                self.daily_offer_price.delete(0, tk.END)
+        """Limpia la cola y todos los formularios"""
+        if not self.offer_queue:
+            return
+        if messagebox.askyesno("Confirmar", "¿Limpiar todas las ofertas de la cola?"):
+            self.offer_queue.clear()
+            self.refresh_queue_display()
+            for type_key, entries in self.form_entries.items():
+                for key, widget in entries.items():
+                    if key == 'combo':
+                        widget.set('10%')
+                    elif key == 'quantity':
+                        widget.delete(0, tk.END)
+                        widget.insert(0, "3")
+                    else:
+                        widget.delete(0, tk.END)
 
     def create_product_form(self, parent):
         form_frame = tk.Frame(parent, bg='white', relief='flat', bd=0)

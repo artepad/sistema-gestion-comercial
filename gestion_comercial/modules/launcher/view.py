@@ -94,8 +94,8 @@ class LauncherView(tk.Frame):
         # Contador de Caja
         self.create_cash_counter_button(buttons_container)
 
-        # Lector de Precios
-        self.create_price_reader_button(buttons_container)
+        # Punto de Venta
+        self.create_point_of_sale_button(buttons_container)
 
         # Comparador de Precios
         self.create_price_comparator_button(buttons_container)
@@ -264,8 +264,8 @@ class LauncherView(tk.Frame):
             widget.bind("<Enter>", on_enter)
             widget.bind("<Leave>", on_leave)
 
-    def create_price_reader_button(self, parent):
-        """Crea el botón de Lector de Precios."""
+    def create_point_of_sale_button(self, parent):
+        """Crea el botón de Punto de Venta."""
         color = '#27ae60'
 
         # Container principal con sombra
@@ -294,7 +294,7 @@ class LauncherView(tk.Frame):
         # Icono a la izquierda
         icon_label = tk.Label(
             inner_frame,
-            text="💲",
+            text="🛒",
             font=(Theme.FONT_FAMILY, 22),
             bg='white',
             fg=color,
@@ -305,7 +305,7 @@ class LauncherView(tk.Frame):
         # Título
         title_label = tk.Label(
             inner_frame,
-            text="Lector de Precios",
+            text="Punto de Venta",
             font=(Theme.FONT_FAMILY, 14, 'bold'),
             bg='white',
             fg=Theme.TEXT_PRIMARY,
@@ -318,7 +318,7 @@ class LauncherView(tk.Frame):
         button_frame.pack_propagate(False)
 
         # Hacer clickeable
-        command = lambda: self.navigator.show_view('price_reader')
+        command = lambda: self.navigator.show_view('point_of_sale')
         widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
         for widget in widgets:
             widget.bind('<Button-1>', lambda e: command())

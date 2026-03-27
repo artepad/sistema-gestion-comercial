@@ -1,6 +1,11 @@
+import os
 import tkinter as tk
+import shutil
+from tkinter import filedialog, messagebox, ttk
 from datetime import datetime
 from gestion_comercial.config.theme import Theme
+from gestion_comercial.config.settings import Settings
+from gestion_comercial.modules.tag_manager.database import ProductDatabase
 
 class LauncherView(tk.Frame):
     def __init__(self, parent, navigator):
@@ -545,6 +550,36 @@ class LauncherView(tk.Frame):
         link_label.bind("<Enter>", on_enter)
         link_label.bind("<Leave>", on_leave)
 
+        # Separator " | "
+        tk.Label(
+            footer_content,
+            text=" | ",
+            font=(Theme.FONT_FAMILY, 11),
+            bg=Theme.BACKGROUND,
+            fg='#8a939e'
+        ).pack(side='left')
+
+        # "⚙ Configuración" clickeable link
+        config_label = tk.Label(
+            footer_content,
+            text="⚙ Configuración",
+            font=(Theme.FONT_FAMILY, 11, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TOTAL_FG,
+            cursor='hand2'
+        )
+        config_label.pack(side='left')
+        config_label.bind('<Button-1>', lambda e: self.show_settings())
+
+        def on_config_enter(e):
+            config_label.configure(fg='#1565c0', font=(Theme.FONT_FAMILY, 11, 'bold underline'))
+
+        def on_config_leave(e):
+            config_label.configure(fg=Theme.TOTAL_FG, font=(Theme.FONT_FAMILY, 11, 'bold'))
+
+        config_label.bind("<Enter>", on_config_enter)
+        config_label.bind("<Leave>", on_config_leave)
+
     def show_contact_info(self):
         """Muestra ventana emergente con información de contacto"""
         # Create popup window
@@ -557,11 +592,14 @@ class LauncherView(tk.Frame):
         window_width = 480
         window_height = 320
 
-        # Center the window
-        screen_width = popup.winfo_screenwidth()
-        screen_height = popup.winfo_screenheight()
-        x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 2
+        # Center popup over the main window
+        root = self.winfo_toplevel()
+        root_x = root.winfo_x()
+        root_y = root.winfo_y()
+        root_w = root.winfo_width()
+        root_h = root.winfo_height()
+        x = root_x + (root_w - window_width) // 2
+        y = root_y + (root_h - window_height) // 2
         popup.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         # Make window modal
@@ -663,6 +701,385 @@ class LauncherView(tk.Frame):
 
         close_button.bind("<Enter>", on_button_enter)
         close_button.bind("<Leave>", on_button_leave)
+
+    def show_settings(self):
+        """Muestra ventana emergente de configuración del sistema"""
+        popup = tk.Toplevel(self)
+        popup.title("Configuración del Sistema")
+        popup.configure(bg=Theme.BACKGROUND)
+        popup.resizable(False, False)
+
+        window_width = 520
+        window_height = 420
+        root = self.winfo_toplevel()
+        root_x = root.winfo_x()
+        root_y = root.winfo_y()
+        root_w = root.winfo_width()
+        root_h = root.winfo_height()
+        x = root_x + (root_w - window_width) // 2
+        y = root_y + (root_h - window_height) // 2
+        popup.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+        popup.transient(self.master)
+        popup.grab_set()
+
+        # Header
+        header_frame = tk.Frame(popup, bg=Theme.TEXT_PRIMARY, height=70)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        tk.Frame(header_frame, bg='#27ae60', height=4).pack(fill='x')
+        tk.Label(
+            header_frame,
+            text="Configuración del Sistema",
+            font=(Theme.FONT_FAMILY, 16, 'bold'),
+            bg=Theme.TEXT_PRIMARY,
+            fg='white'
+        ).pack(expand=True)
+
+        # Content area
+        content_frame = tk.Frame(popup, bg=Theme.BACKGROUND)
+        content_frame.pack(fill='both', expand=True, padx=25, pady=15)
+
+        # === Database Section ===
+        db_section = tk.LabelFrame(
+            content_frame,
+            text="  Base de Datos  ",
+            font=(Theme.FONT_FAMILY, 11, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            bd=1,
+            relief='solid',
+            padx=15,
+            pady=10
+        )
+        db_section.pack(fill='x', pady=(0, 12))
+
+        # DB status info
+        db_info = ProductDatabase.get_database_info()
+
+        status_frame = tk.Frame(db_section, bg=Theme.BACKGROUND)
+        status_frame.pack(fill='x', pady=(5, 10))
+
+        if db_info['exists']:
+            status_color = '#27ae60'
+            status_text = f"Conectada  ({db_info['total_products']} productos)"
+            date_text = f"Última actualización: {db_info['last_modified']}"
+        else:
+            status_color = '#e74c3c'
+            status_text = "Sin base de datos"
+            date_text = "Cargue un archivo .xlsx para comenzar"
+
+        # Status indicator
+        status_row = tk.Frame(status_frame, bg=Theme.BACKGROUND)
+        status_row.pack(fill='x')
+
+        tk.Label(
+            status_row,
+            text="Estado:",
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg='#6c757d'
+        ).pack(side='left')
+
+        tk.Label(
+            status_row,
+            text="  ●",
+            font=(Theme.FONT_FAMILY, 12),
+            bg=Theme.BACKGROUND,
+            fg=status_color
+        ).pack(side='left')
+
+        self._db_status_label = tk.Label(
+            status_row,
+            text=f" {status_text}",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY
+        )
+        self._db_status_label.pack(side='left')
+
+        self._db_date_label = tk.Label(
+            status_frame,
+            text=date_text,
+            font=(Theme.FONT_FAMILY, 9),
+            bg=Theme.BACKGROUND,
+            fg='#6c757d',
+            anchor='w'
+        )
+        self._db_date_label.pack(fill='x', padx=(52, 0))
+
+        # DB Buttons
+        btn_frame = tk.Frame(db_section, bg=Theme.BACKGROUND)
+        btn_frame.pack(fill='x', pady=(5, 0))
+
+        load_btn = tk.Button(
+            btn_frame,
+            text="Cargar Base de Datos",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg='#3498db',
+            fg='white',
+            bd=0,
+            padx=15,
+            pady=8,
+            cursor='hand2',
+            command=lambda: self._load_database(popup)
+        )
+        load_btn.pack(side='left', padx=(0, 10))
+
+        self._delete_btn = tk.Button(
+            btn_frame,
+            text="Eliminar BD",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg='#e74c3c' if db_info['exists'] else '#bdc3c7',
+            fg='white',
+            bd=0,
+            padx=15,
+            pady=8,
+            cursor='hand2' if db_info['exists'] else 'arrow',
+            state='normal' if db_info['exists'] else 'disabled',
+            command=lambda: self._delete_database(popup)
+        )
+        self._delete_btn.pack(side='left')
+
+        # Hover effects for buttons
+        def on_load_enter(e):
+            load_btn.configure(bg='#2980b9')
+        def on_load_leave(e):
+            load_btn.configure(bg='#3498db')
+        load_btn.bind("<Enter>", on_load_enter)
+        load_btn.bind("<Leave>", on_load_leave)
+
+        def on_delete_enter(e):
+            if self._delete_btn['state'] != 'disabled':
+                self._delete_btn.configure(bg='#c0392b')
+        def on_delete_leave(e):
+            if self._delete_btn['state'] != 'disabled':
+                self._delete_btn.configure(bg='#e74c3c')
+        self._delete_btn.bind("<Enter>", on_delete_enter)
+        self._delete_btn.bind("<Leave>", on_delete_leave)
+
+        # === Screen Section ===
+        screen_section = tk.LabelFrame(
+            content_frame,
+            text="  Pantalla  ",
+            font=(Theme.FONT_FAMILY, 11, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            bd=1,
+            relief='solid',
+            padx=15,
+            pady=10
+        )
+        screen_section.pack(fill='x', pady=(0, 10))
+
+        # Resolution row
+        res_row = tk.Frame(screen_section, bg=Theme.BACKGROUND)
+        res_row.pack(fill='x', pady=(5, 5))
+
+        tk.Label(
+            res_row,
+            text="Resolución:",
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg='#6c757d'
+        ).pack(side='left', padx=(0, 10))
+
+        res_options = [f"{w} x {h}" for w, h in Settings.AVAILABLE_RESOLUTIONS]
+        current_res = f"{Settings.WINDOW_WIDTH} x {Settings.WINDOW_HEIGHT}"
+
+        self._res_combo = ttk.Combobox(
+            res_row,
+            values=res_options,
+            state='readonly',
+            font=(Theme.FONT_FAMILY, 10),
+            width=15
+        )
+        self._res_combo.set(current_res)
+        self._res_combo.pack(side='left')
+        self._res_combo.bind('<<ComboboxSelected>>', lambda e: self._on_resolution_change())
+
+        self._res_note = tk.Label(
+            screen_section,
+            text="",
+            font=(Theme.FONT_FAMILY, 9, 'italic'),
+            bg=Theme.BACKGROUND,
+            fg='#27ae60',
+            anchor='w'
+        )
+        self._res_note.pack(fill='x')
+
+        # Align top checkbox
+        self._align_top_var = tk.BooleanVar(value=Settings.ALIGN_TOP)
+        align_check = tk.Checkbutton(
+            screen_section,
+            text="Iniciar ventana alineada en la parte superior",
+            variable=self._align_top_var,
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            activebackground=Theme.BACKGROUND,
+            selectcolor='white',
+            cursor='hand2',
+            command=self._on_align_top_change
+        )
+        align_check.pack(fill='x', pady=(5, 0), anchor='w')
+
+        tk.Label(
+            screen_section,
+            text="Útil en equipos con alta resolución donde la ventana puede aparecer cortada",
+            font=(Theme.FONT_FAMILY, 8, 'italic'),
+            bg=Theme.BACKGROUND,
+            fg='#95a5a6',
+            anchor='w'
+        ).pack(fill='x', padx=(22, 0))
+
+        # Close button
+        button_frame = tk.Frame(popup, bg=Theme.BACKGROUND)
+        button_frame.pack(fill='x', padx=25, pady=(0, 20))
+
+        close_button = tk.Button(
+            button_frame,
+            text="Cerrar",
+            font=(Theme.FONT_FAMILY, 11, 'bold'),
+            bg='#27ae60',
+            fg='white',
+            bd=0,
+            padx=30,
+            pady=10,
+            cursor='hand2',
+            command=popup.destroy
+        )
+        close_button.pack()
+
+        def on_close_enter(e):
+            close_button.configure(bg='#1e8449')
+        def on_close_leave(e):
+            close_button.configure(bg='#27ae60')
+        close_button.bind("<Enter>", on_close_enter)
+        close_button.bind("<Leave>", on_close_leave)
+
+    def _refresh_db_status(self):
+        """Actualiza los labels de estado de la BD en el popup de configuración"""
+        db_info = ProductDatabase.get_database_info()
+
+        if db_info['exists']:
+            status_text = f" Conectada  ({db_info['total_products']} productos)"
+            date_text = f"Última actualización: {db_info['last_modified']}"
+            self._db_status_label.configure(text=status_text)
+            self._db_date_label.configure(text=date_text)
+            self._delete_btn.configure(
+                bg='#e74c3c', state='normal', cursor='hand2'
+            )
+        else:
+            self._db_status_label.configure(text=" Sin base de datos")
+            self._db_date_label.configure(text="Cargue un archivo .xlsx para comenzar")
+            self._delete_btn.configure(
+                bg='#bdc3c7', state='disabled', cursor='arrow'
+            )
+
+    def _load_database(self, popup):
+        """Permite al usuario seleccionar y cargar un archivo de base de datos"""
+        file_path = filedialog.askopenfilename(
+            parent=popup,
+            title="Seleccionar Base de Datos",
+            filetypes=[("Archivos Excel", "*.xlsx")],
+            initialdir=os.path.expanduser("~")
+        )
+
+        if not file_path:
+            return
+
+        try:
+            # Ensure bd directory exists
+            bd_folder = ProductDatabase.DB_FOLDER
+            os.makedirs(bd_folder, exist_ok=True)
+
+            # Copy file to bd folder
+            dest_path = os.path.join(bd_folder, os.path.basename(file_path))
+            shutil.copy2(file_path, dest_path)
+
+            self._refresh_db_status()
+            messagebox.showinfo(
+                "Base de Datos Cargada",
+                f"Se cargó correctamente:\n{os.path.basename(file_path)}",
+                parent=popup
+            )
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"No se pudo cargar la base de datos:\n{str(e)}",
+                parent=popup
+            )
+
+    def _delete_database(self, popup):
+        """Elimina la base de datos actual previa confirmación"""
+        confirm = messagebox.askyesno(
+            "Confirmar Eliminación",
+            "¿Está seguro que desea eliminar la base de datos?\n\nEsta acción no se puede deshacer.",
+            parent=popup
+        )
+
+        if not confirm:
+            return
+
+        try:
+            db_file = ProductDatabase.get_db_file()
+            if db_file and os.path.exists(db_file):
+                os.remove(db_file)
+                self._refresh_db_status()
+                messagebox.showinfo(
+                    "Base de Datos Eliminada",
+                    "La base de datos fue eliminada correctamente.",
+                    parent=popup
+                )
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"No se pudo eliminar la base de datos:\n{str(e)}",
+                parent=popup
+            )
+
+    def _on_resolution_change(self):
+        """Maneja el cambio de resolución en el combobox"""
+        selected = self._res_combo.get()
+        parts = selected.split(' x ')
+        new_w, new_h = int(parts[0]), int(parts[1])
+
+        # Update settings in memory and save
+        Settings.WINDOW_WIDTH = new_w
+        Settings.WINDOW_HEIGHT = new_h
+        Settings.save()
+
+        # Resize the main window immediately
+        root = self.winfo_toplevel()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        x = (screen_width - new_w) // 2
+        if Settings.ALIGN_TOP:
+            y = 0
+        else:
+            y = (screen_height - new_h) // 2
+        root.geometry(f"{new_w}x{new_h}+{x}+{y}")
+
+        self._res_note.configure(text="✓ Configuración guardada")
+
+    def _on_align_top_change(self):
+        """Maneja el cambio del checkbox de alinear arriba"""
+        Settings.ALIGN_TOP = self._align_top_var.get()
+        Settings.save()
+
+        # Apply immediately
+        root = self.winfo_toplevel()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        x = (screen_width - Settings.WINDOW_WIDTH) // 2
+        if Settings.ALIGN_TOP:
+            y = 0
+        else:
+            y = (screen_height - Settings.WINDOW_HEIGHT) // 2
+        root.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")
+
+        self._res_note.configure(text="✓ Configuración guardada")
 
     def update_clock(self):
         now = datetime.now()

@@ -7,6 +7,9 @@ class MainApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # Cargar configuración guardada
+        Settings.load()
+
         # Ocultar ventana temporalmente mientras se configura
         self.withdraw()
 
@@ -22,7 +25,10 @@ class MainApp(tk.Tk):
         screen_height = self.winfo_screenheight()
 
         x = (screen_width - Settings.WINDOW_WIDTH) // 2
-        y = (screen_height - Settings.WINDOW_HEIGHT) // 2
+        if Settings.ALIGN_TOP:
+            y = 0
+        else:
+            y = (screen_height - Settings.WINDOW_HEIGHT) // 2
 
         # Establecer geometría con tamaño Y posición desde el inicio
         self.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")

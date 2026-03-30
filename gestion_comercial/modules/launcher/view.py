@@ -515,13 +515,37 @@ class LauncherView(tk.Frame):
         # Separator line with better color
         tk.Frame(footer_frame, bg='#dde1e6', height=2).pack(fill='x', pady=(10, 8))
 
-        # Footer content container
+        # Footer content container (fill width for left/right layout)
         footer_content = tk.Frame(footer_frame, bg=Theme.BACKGROUND)
-        footer_content.pack(expand=True)
+        footer_content.pack(fill='x', expand=True, padx=15)
 
-        # Main text
-        tk.Label(
+        # ☰ icon — right side (packed first so it anchors to the right)
+        config_label = tk.Label(
             footer_content,
+            text="☰",
+            font=(Theme.FONT_FAMILY, 16),
+            bg=Theme.BACKGROUND,
+            fg='#8a939e',
+            cursor='hand2'
+        )
+        config_label.pack(side='right')
+        config_label.bind('<Button-1>', lambda e: self.show_settings())
+
+        def on_config_enter(e):
+            config_label.configure(fg=Theme.TOTAL_FG)
+
+        def on_config_leave(e):
+            config_label.configure(fg='#8a939e')
+
+        config_label.bind("<Enter>", on_config_enter)
+        config_label.bind("<Leave>", on_config_leave)
+
+        # Center group: main text + help link
+        center_frame = tk.Frame(footer_content, bg=Theme.BACKGROUND)
+        center_frame.pack(side='left', expand=True)
+
+        tk.Label(
+            center_frame,
             text="Sistema de Gestión Comercial ",
             font=(Theme.FONT_FAMILY, 11, 'bold'),
             bg=Theme.BACKGROUND,
@@ -530,7 +554,7 @@ class LauncherView(tk.Frame):
 
         # "¿Necesitas ayuda?" clickeable link
         link_label = tk.Label(
-            footer_content,
+            center_frame,
             text="¿Necesitas ayuda?",
             font=(Theme.FONT_FAMILY, 11, 'bold'),
             bg=Theme.BACKGROUND,
@@ -540,7 +564,6 @@ class LauncherView(tk.Frame):
         link_label.pack(side='left')
         link_label.bind('<Button-1>', lambda e: self.show_contact_info())
 
-        # Hover effects for the link
         def on_enter(e):
             link_label.configure(fg='#1565c0', font=(Theme.FONT_FAMILY, 11, 'bold underline'))
 
@@ -549,33 +572,6 @@ class LauncherView(tk.Frame):
 
         link_label.bind("<Enter>", on_enter)
         link_label.bind("<Leave>", on_leave)
-
-        # Separator " | "
-        tk.Label(
-            footer_content,
-            text=" | ",
-            font=(Theme.FONT_FAMILY, 11),
-            bg=Theme.BACKGROUND,
-            fg='#8a939e'
-        ).pack(side='left')
-
-        # "⚙ Configuración" clickeable link
-        config_label = tk.Label(
-            footer_content,
-            text="⚙ Configuración",
-            font=(Theme.FONT_FAMILY, 11, 'bold'),
-            bg=Theme.BACKGROUND,
-            fg=Theme.TOTAL_FG,
-            cursor='hand2'
-        )
-        config_label.pack(side='left')
-        config_label.bind('<Button-1>', lambda e: self.show_settings())
-
-        def on_config_enter(e):
-            config_label.configure(fg='#1565c0', font=(Theme.FONT_FAMILY, 11, 'bold underline'))
-
-        def on_config_leave(e):
-            config_label.configure(fg=Theme.TOTAL_FG, font=(Theme.FONT_FAMILY, 11, 'bold'))
 
         config_label.bind("<Enter>", on_config_enter)
         config_label.bind("<Leave>", on_config_leave)

@@ -29,28 +29,80 @@ class LauncherView(tk.Frame):
         self.create_footer()
         
     def create_header(self):
+        BIRTHDAYS = {
+            (1, 19): {
+                'title': 'Hoy es el cumpleaños de Miguel Ángel',
+                'subtitles': [
+                    'Alerta: hoy cumple años Miguel Ángel y espera ser felicitado con entusiasmo 🎂😄',
+                    'Recuerda felicitarlo hoy, seguro que lo va a hacer muy feliz 🎉',
+                    'Un día especial para alguien especial — ¡no olvides dedicarle un momento! 🌟',
+                ]
+            },
+            (3, 21): {
+                'title': 'Feliz Cumpleaños Rodrigo',
+                'subtitles': [
+                    'Que este día te traiga todo lo que mereces, hermano ✨',
+                    'Gracias por estar siempre ahí, hermano — que lo disfrutes mucho 🎂',
+                    'Un año más de risas, de proyectos y de crecer juntos, hermano 💪',
+                ]
+            },
+            (4, 6): {
+                'title': 'Feliz Cumpleaños Angélica',
+                'subtitles': [
+                    'Gracias por todo tu amor y dedicación, mamá 💖',
+                    'Eres la fuerza de esta familia — que hoy sea un día tan hermoso como tú, mamá 🌸',
+                    'Cada año que pasa, más agradecidos estamos de tenerte, mamá 🙏',
+                ]
+            },
+            (9, 12): {
+                'title': 'Feliz Cumpleaños Yamil',
+                'subtitles': [
+                    'Que sigas creciendo con alegría y éxito, hermano 🌟',
+                    'Eres de los grandes, hermano — que este año sea increíble para ti 🚀',
+                    'Orgullo de esta familia — feliz cumpleaños, hermano 🎊',
+                ]
+            },
+            (12, 26): {
+                'title': 'Feliz Cumpleaños Miguel',
+                'subtitles': [
+                    'Tu ejemplo nos guía cada día, papá 🙏',
+                    'Gracias por construir la familia que somos, papá — que lo disfrutes mucho 💛',
+                    'Con cada año que pasa, más te admiramos y queremos, papá ❤️',
+                ]
+            },
+        }
+
+        now = datetime.now()
+        birthday = BIRTHDAYS.get((now.month, now.day))
+        if birthday:
+            title_text = birthday['title']
+            subtitle_text = birthday['subtitles'][now.year % 3]
+            accent_color = '#e74c3c'
+        else:
+            title_text = "Sistema de Gestión"
+            subtitle_text = "Solución integral para tu negocio"
+            accent_color = '#2ecc71'
+
         header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=120)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
 
-        # Accent line with gradient effect (simulated with multiple lines)
+        # Accent line
         accent_container = tk.Frame(header_frame, bg=Theme.TEXT_PRIMARY, height=5)
         accent_container.pack(fill='x')
-        tk.Frame(accent_container, bg='#2ecc71', height=5).pack(fill='x')
+        tk.Frame(accent_container, bg=accent_color, height=5).pack(fill='x')
 
-        # Title with better spacing
         tk.Label(
             header_frame,
-            text="Sistema de Gestión",
+            text=title_text,
             font=(Theme.FONT_FAMILY, 24, 'bold'),
             bg=Theme.TEXT_PRIMARY,
             fg='white'
         ).pack(expand=True, pady=(18, 5))
 
-        # Subtitle with improved color
         tk.Label(
             header_frame,
-            text="Solución integral para tu negocio",
+            text=subtitle_text,
             font=(Theme.FONT_FAMILY, 13),
             bg=Theme.TEXT_PRIMARY,
             fg='#b4bcc4'

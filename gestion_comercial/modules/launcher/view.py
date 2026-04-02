@@ -6,6 +6,7 @@ from datetime import datetime
 from gestion_comercial.config.theme import Theme
 from gestion_comercial.config.settings import Settings
 from gestion_comercial.modules.tag_manager.database import ProductDatabase
+from gestion_comercial import __version__
 
 class LauncherView(tk.Frame):
     def __init__(self, parent, navigator):
@@ -758,7 +759,7 @@ class LauncherView(tk.Frame):
         popup.resizable(False, False)
 
         window_width = 520
-        window_height = 420
+        window_height = 570
         root = self.winfo_toplevel()
         root_x = root.winfo_x()
         root_y = root.winfo_y()
@@ -980,6 +981,47 @@ class LauncherView(tk.Frame):
             fg='#95a5a6',
             anchor='w'
         ).pack(fill='x', padx=(22, 0))
+
+        # === Acerca del Sistema ===
+        about_section = tk.LabelFrame(
+            content_frame,
+            text="  Acerca del Sistema  ",
+            font=(Theme.FONT_FAMILY, 11, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            bd=1,
+            relief='solid',
+            padx=15,
+            pady=10
+        )
+        about_section.pack(fill='x', pady=(0, 10))
+
+        about_row = tk.Frame(about_section, bg=Theme.BACKGROUND)
+        about_row.pack(fill='x', pady=5)
+
+        tk.Label(
+            about_row,
+            text="Versión:",
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg='#6c757d'
+        ).pack(side='left')
+
+        tk.Label(
+            about_row,
+            text=f"  v{__version__}",
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY
+        ).pack(side='left')
+
+        tk.Label(
+            about_row,
+            text="  —  Sistema de Gestión Comercial",
+            font=(Theme.FONT_FAMILY, 9),
+            bg=Theme.BACKGROUND,
+            fg='#95a5a6'
+        ).pack(side='left')
 
         # Close button
         button_frame = tk.Frame(popup, bg=Theme.BACKGROUND)

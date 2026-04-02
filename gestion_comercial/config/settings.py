@@ -5,7 +5,6 @@ import json
 class Settings:
     # App Info
     APP_NAME = "Sistema de Gestión Comercial"
-    VERSION = "2.0.0"
 
     # Window Configuration (defaults)
     WINDOW_WIDTH = 800

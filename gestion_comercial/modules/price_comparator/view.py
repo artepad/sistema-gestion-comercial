@@ -294,12 +294,42 @@ class PriceComparatorView(tk.Frame):
         scrollbar_x = ttk.Scrollbar(table_frame, orient='horizontal')
         scrollbar_x.pack(side='bottom', fill='x')
 
+        # Estilo del Treeview (igual al POS)
+        tree_style = ttk.Style()
+        tree_style.theme_use('default')
+        tree_style.configure(
+            'Comparator.Treeview',
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            rowheight=30,
+            background='white',
+            fieldbackground='white',
+            foreground=Theme.TEXT_PRIMARY
+        )
+        tree_style.configure(
+            'Comparator.Treeview.Heading',
+            font=(Theme.FONT_FAMILY, 10, 'bold'),
+            background=Theme.TEXT_PRIMARY,
+            foreground='white',
+            relief='flat',
+            padding=6
+        )
+        tree_style.map(
+            'Comparator.Treeview.Heading',
+            background=[('active', '#34495e')]
+        )
+        tree_style.map(
+            'Comparator.Treeview',
+            background=[('selected', '#d4e6f1')],
+            foreground=[('selected', Theme.TEXT_PRIMARY)]
+        )
+
         # Crear Treeview
         columns = ('barcode', 'name', 'main_price', 'comp_price', 'difference', 'status')
         self.results_tree = ttk.Treeview(
             table_frame,
             columns=columns,
             show='headings',
+            style='Comparator.Treeview',
             yscrollcommand=scrollbar_y.set,
             xscrollcommand=scrollbar_x.set,
             height=12
@@ -319,14 +349,17 @@ class PriceComparatorView(tk.Frame):
 
         self.results_tree.column('barcode', width=100, anchor='center')
         self.results_tree.column('name', width=220, anchor='w')
-        self.results_tree.column('main_price', width=110, anchor='center')
-        self.results_tree.column('comp_price', width=110, anchor='center')
-        self.results_tree.column('difference', width=90, anchor='center')
+        self.results_tree.column('main_price', width=110, anchor='e')
+        self.results_tree.column('comp_price', width=110, anchor='e')
+        self.results_tree.column('difference', width=90, anchor='e')
         self.results_tree.column('status', width=90, anchor='center')
 
         self.results_tree.pack(fill='both', expand=True)
 
-        # Configurar tags para colores
+        # Tags zebra (igual al POS)
+        self.results_tree.tag_configure('even', background='#f8f9fa')
+        self.results_tree.tag_configure('odd', background='white')
+        # Tags de estado (colores informativos sobre la zebra)
         self.results_tree.tag_configure('price_diff', background='#fff3cd')
         self.results_tree.tag_configure('missing', background='#cfe2ff')
 
@@ -492,20 +525,21 @@ class PriceComparatorView(tk.Frame):
         for item in self.results_tree.get_children():
             self.results_tree.delete(item)
 
-        # Agregar diferencias
-        for diff in self.differences:
+        # Agregar diferencias con zebra + color de estado
+        for i, diff in enumerate(self.differences):
             barcode = diff['barcode']
             name = diff['name']
             main_price = f"${diff['main_price']:,.0f}"
             comp_price = f"${diff['comparison_price']:,.0f}" if diff['comparison_price'] else 'N/A'
             difference = f"${diff['difference']:,.0f}" if diff['difference'] else 'N/A'
             status = 'Diferencia' if diff['status'] == 'price_diff' else 'Faltante'
+            zebra = 'even' if i % 2 == 0 else 'odd'
 
             self.results_tree.insert(
                 '',
                 'end',
                 values=(barcode, name, main_price, comp_price, difference, status),
-                tags=(diff['status'],)
+                tags=(zebra, diff['status'])
             )
 
     def on_row_double_click(self, event):

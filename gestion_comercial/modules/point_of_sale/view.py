@@ -8,6 +8,8 @@ Incluye dos pestañas:
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
+import winsound
+import threading
 import shutil
 from datetime import datetime
 from gestion_comercial.config.theme import Theme
@@ -371,6 +373,15 @@ class PointOfSaleView(tk.Frame):
 
     # ─── POS: Lógica ────────────────────────────────────────
 
+    def _play_beep(self, success):
+        """Reproduce un beep en un hilo separado para no bloquear la UI."""
+        def beep():
+            if success:
+                winsound.Beep(1800, 80)
+            else:
+                winsound.Beep(400, 200)
+        threading.Thread(target=beep, daemon=True).start()
+
     def pos_scan_product(self, event=None):
         """Escanea un producto y lo agrega al carrito."""
         barcode = self.pos_barcode_entry.get().strip()
@@ -380,9 +391,11 @@ class PointOfSaleView(tk.Frame):
         success, result = ProductDatabase.search_product(barcode)
 
         if success:
+            self._play_beep(True)
             self.model.add_item(barcode, result['name'], result['price'])
             self.refresh_cart_display()
         else:
+            self._play_beep(False)
             messagebox.showwarning(
                 "Producto no encontrado",
                 f"No se encontró el código: {barcode}",

@@ -47,3 +47,8 @@ nul
 # Archivos de datos sensibles
 gestion_comercial/bd/productos_real.xlsx
 gestion_comercial/bd/backup/
+
+# Build tools - archivos generados
+build_tools/build/
+build_tools/dist/
+build_tools/*.exe

@@ -324,13 +324,13 @@ class CashCounterView(tk.Frame):
         return value_if_allowed.isdigit()
 
     def _validate_decimal(self, value_if_allowed):
-        """Solo permite dígitos y coma como separador decimal"""
+        """Solo permite dígitos y punto o coma como separador decimal (máximo uno)"""
         if value_if_allowed == "":
             return True
-        # Permitir dígitos y máximo una coma
-        if value_if_allowed.count(',') > 1:
+        separators = value_if_allowed.count('.') + value_if_allowed.count(',')
+        if separators > 1:
             return False
-        cleaned = value_if_allowed.replace(',', '')
+        cleaned = value_if_allowed.replace(',', '').replace('.', '')
         return cleaned.isdigit()
 
     # Logic Handlers

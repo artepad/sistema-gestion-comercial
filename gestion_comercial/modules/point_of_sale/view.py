@@ -668,6 +668,12 @@ class PointOfSaleView(tk.Frame):
         qty_entry.select_range(0, tk.END)
         qty_entry.focus_set()
 
+        def close_popup():
+            popup.destroy()
+            self.pos_barcode_entry.focus_set()
+
+        popup.protocol("WM_DELETE_WINDOW", close_popup)
+
         def confirm():
             try:
                 new_qty = int(qty_entry.get().strip())
@@ -678,7 +684,7 @@ class PointOfSaleView(tk.Frame):
                 return
             self.model.update_quantity(index, new_qty)
             self.refresh_cart_display()
-            popup.destroy()
+            close_popup()
 
         btn_frame = tk.Frame(content, bg=Theme.BACKGROUND)
         btn_frame.pack(fill='x', pady=(10, 0))
@@ -697,7 +703,7 @@ class PointOfSaleView(tk.Frame):
             font=(Theme.FONT_FAMILY, 10, 'bold'),
             bg='#95a5a6', fg='white', bd=0,
             padx=20, pady=6, cursor='hand2',
-            command=popup.destroy
+            command=close_popup
         )
         cancel_btn.pack(side='left')
 

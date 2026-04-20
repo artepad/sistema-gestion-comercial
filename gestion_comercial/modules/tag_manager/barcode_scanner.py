@@ -372,6 +372,13 @@ class BarcodeScannerWindow(tk.Toplevel):
             # Producto no encontrado
             messagebox.showerror("Producto No Encontrado", result, parent=self)
 
+            # Restaurar visibilidad y grab después del messagebox.
+            # En Windows, al cerrarse el messagebox el grab del escáner no se
+            # restaura automáticamente, lo que deja la app inaccesible si el
+            # usuario cambia de ventana en ese momento.
+            self.lift()
+            self.grab_set()
+
             # Animación de error (rojo)
             self.barcode_entry.config(highlightbackground='#dc3545', highlightthickness=2, bg='#f8d7da')
 

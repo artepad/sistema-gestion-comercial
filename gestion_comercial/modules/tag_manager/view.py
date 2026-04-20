@@ -1002,11 +1002,14 @@ class TagManagerView(tk.Frame):
     def open_barcode_scanner(self, row_index):
         """
         Abre la ventana de escáner de código de barras para una fila específica.
+        Al cerrarse (producto encontrado o no), el foco vuelve al campo de nombre.
 
         Args:
             row_index (int): Índice de la fila (0-13)
         """
-        show_barcode_scanner(self, row_index, self.on_product_selected)
+        scanner = show_barcode_scanner(self, row_index, self.on_product_selected)
+        self.wait_window(scanner)
+        self.product_entries[row_index].focus_set()
 
     def on_product_selected(self, row_index, product_name, product_price):
         """

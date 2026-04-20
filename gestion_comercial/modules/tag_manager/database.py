@@ -109,7 +109,10 @@ class ProductDatabase:
                 db_code = str(row[0]).strip() if row[0] else ""
                 search_code = str(barcode).strip()
 
-                if db_code == search_code:
+                # Excel convierte códigos numéricos a número, eliminando los ceros
+                # iniciales (ej: "0350000050" → 350000050). Para evitar falsos negativos,
+                # comparamos ambos códigos normalizados (sin ceros a la izquierda).
+                if db_code == search_code or db_code.lstrip('0') == search_code.lstrip('0'):
                     # Producto encontrado
                     product_name = str(row[1]).strip() if row[1] else ""
 

@@ -593,6 +593,11 @@ class PointOfSaleView(tk.Frame):
                 f"${self.format_price(subtotal)}"
             ), tags=(tag,))
 
+        # Scroll automático al último producto agregado
+        children = self.cart_tree.get_children()
+        if children:
+            self.cart_tree.see(children[-1])
+
         # Actualizar total
         total = self.model.get_total()
         self.total_label.configure(text=f"TOTAL: ${self.format_price(total)}")

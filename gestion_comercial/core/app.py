@@ -43,16 +43,56 @@ class MainApp(tk.Tk):
         # Mostrar la ventana ya centrada
         self.deiconify()
 
-        # Cuando la ventana principal se restaura (ej: después de Win+D),
-        # re-levantar el popup activo si hay uno con grab_set en curso.
-        # Sin esto, el popup queda bloqueado e inaccesible tras minimizar con Win+D.
-        self.bind('<Map>', self._on_restore)
+        # --- Manejo de popups modales frente a Win+D y minimización ---
+        # Win+D oculta ventanas con SWP_HIDEWINDOW (distinto al minimize normal).
+        # Con grab_set() activo en un popup, la app queda inaccesible al restaurar.
+        # Solución: liberar el grab al ocultarse y restaurarlo al volver.
+        self._popup_with_grab = None
+        self.bind('<Unmap>', self._on_root_hidden)
+        self.bind('<Map>',   self._on_root_shown)
+        self.bind('<FocusIn>', self._on_root_focus)
 
-    def _on_restore(self, event):
-        """Re-levanta el popup activo al restaurar la ventana desde minimizado."""
+    # ------------------------------------------------------------------
+    #  Handlers para minimización / Win+D
+    # ------------------------------------------------------------------
+
+    def _on_root_hidden(self, event):
+        """
+        La ventana raíz fue ocultada (minimize clásico o Win+D).
+        Liberar el grab activo para que el OS pueda manejar la restauración.
+        """
         if event.widget is not self:
             return
-        grab_window = self.grab_current()
-        if grab_window and grab_window is not self:
-            grab_window.lift()
-            grab_window.focus_force()
+        grab = self.grab_current()
+        if grab and grab is not self and grab.winfo_exists():
+            self._popup_with_grab = grab
+            grab.grab_release()
+
+    def _on_root_shown(self, event):
+        """
+        La ventana raíz fue restaurada (botón de barra de tareas o Win+D).
+        Recuperar el popup y re-aplicar el grab con una pequeña demora.
+        """
+        if event.widget is not self:
+            return
+        self.after(150, self._restore_popup)
+
+    def _on_root_focus(self, event):
+        """
+        La ventana raíz recuperó el foco del OS.
+        Alternativa a <Map> para el caso Win+D, donde <Map> puede no dispararse.
+        Solo actúa si hay un popup guardado pendiente de restaurar.
+        """
+        if event.widget is not self or not self._popup_with_grab:
+            return
+        self.after(100, self._restore_popup)
+
+    def _restore_popup(self):
+        """Restaura el popup guardado: lo muestra, lo trae al frente y re-aplica grab."""
+        popup = self._popup_with_grab
+        if popup and popup.winfo_exists():
+            self._popup_with_grab = None
+            popup.deiconify()   # Necesario para Win+D (ventanas ocultas con SWP_HIDEWINDOW)
+            popup.lift()
+            popup.grab_set()
+            popup.focus_force()

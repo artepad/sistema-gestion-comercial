@@ -44,6 +44,9 @@ class CashCounterView(tk.Frame):
         # Action Buttons
         self.create_action_buttons(content_frame)
 
+        # Vincular Enter para navegar entre campos
+        self._bind_enter_navigation()
+
         # Bottom blue accent strip
         self.create_bottom_accent()
         
@@ -411,6 +414,28 @@ class CashCounterView(tk.Frame):
         for l in self.subtotals_bills.values(): l.config(text="$0")
         for l in self.labels_coins_value.values(): l.config(text="$0")
         self.calculate_totals()
+
+    def _bind_enter_navigation(self):
+        """Vincula la tecla Enter para mover el foco al siguiente campo de entrada.
+
+        Orden: billetes (mayor → menor) → $500 cantidad → $100 peso → $50 peso → $10 peso.
+        Las cantidades de monedas con peso se omiten (se calculan automáticamente).
+        El último campo ($10 peso) no avanza.
+        """
+        all_entries = []
+
+        for denom in self.model.bills:                                          # 20000, 10000, 5000, 2000, 1000
+            all_entries.append(self.entries_bills[denom])
+
+        all_entries.append(self.entries_coins_qty[500])                         # $500 qty
+
+        for denom in sorted(self.model.coins_weight.keys(), reverse=True):      # 100, 50, 10
+            all_entries.append(self.entries_coins_weight[denom])                # solo peso
+
+        # Vincular Enter → siguiente campo; el último campo no avanza
+        for i, entry in enumerate(all_entries[:-1]):
+            next_entry = all_entries[i + 1]
+            entry.bind('<Return>', lambda e, nxt=next_entry: nxt.focus_set())
 
     def format_number(self, num):
         return f"{int(num):,}".replace(",", ".")

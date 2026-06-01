@@ -3,12 +3,12 @@
 
 [Setup]
 AppName=Sistema de Gestión Comercial
-AppVersion=3.0.4
+AppVersion=3.0.5
 AppPublisher=Miguel Ángel Saavedra
 DefaultDirName={localappdata}\SistemaGestion
 DefaultGroupName=Sistema de Gestión Comercial
 OutputDir=.
-OutputBaseFilename=Instalador_SistemaGestion_v3.0.4
+OutputBaseFilename=Instalador_SistemaGestion_v3.0.5
 Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes

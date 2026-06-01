@@ -186,7 +186,7 @@ class LauncherView(tk.Frame):
         icon_emoji = tk.Label(
             icon_container,
             text="🏷️",
-            font=(Theme.FONT_FAMILY, 19 if Settings.COMPACT_MODE else 22),
+            font=(Theme.FONT_FAMILY, 18 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color
         )
@@ -268,7 +268,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="💰",
-            font=(Theme.FONT_FAMILY, 19 if Settings.COMPACT_MODE else 22),
+            font=(Theme.FONT_FAMILY, 18 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=0 if Settings.COMPACT_MODE else 2
@@ -347,7 +347,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="🛒",
-            font=(Theme.FONT_FAMILY, 19 if Settings.COMPACT_MODE else 22),
+            font=(Theme.FONT_FAMILY, 18 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=0 if Settings.COMPACT_MODE else 2
@@ -426,7 +426,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="⚖️",
-            font=(Theme.FONT_FAMILY, 19 if Settings.COMPACT_MODE else 22),
+            font=(Theme.FONT_FAMILY, 18 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=0 if Settings.COMPACT_MODE else 2

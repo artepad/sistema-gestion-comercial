@@ -191,10 +191,10 @@ class CashCounterView(tk.Frame):
             fg='black',
             padx=5 if c else 10,
             pady=3,
-            anchor='w',
+            anchor='center',
             width=9 if c else 12
         )
-        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2, sticky='w')
+        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2)
 
         # Empty space for peso column (no weight for 500 peso coin)
         tk.Label(parent, text="", font=Theme.FONTS['body'], bg=Theme.COINS_BG).grid(row=row, column=1, pady=2)
@@ -223,10 +223,10 @@ class CashCounterView(tk.Frame):
             fg='black',
             padx=5 if c else 10,
             pady=3,
-            anchor='w',
+            anchor='center',
             width=9 if c else 12
         )
-        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2, sticky='w')
+        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2)
 
         entry_w = tk.Entry(parent, width=8 if c else 10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
                            validate='key', validatecommand=self._vcmd_decimal)

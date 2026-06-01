@@ -181,7 +181,7 @@ class LauncherView(tk.Frame):
         inner_frame.pack(fill='both', expand=True, padx=25, pady=18)
 
         icon_container = tk.Frame(inner_frame, bg='white')
-        icon_container.pack(side='left', padx=(0, 15))
+        icon_container.pack(side='left', padx=(8, 7) if Settings.COMPACT_MODE else (0, 15))
 
         icon_emoji = tk.Label(
             icon_container,
@@ -271,9 +271,9 @@ class LauncherView(tk.Frame):
             font=(Theme.FONT_FAMILY, 14 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
-            width=2
+            width=0 if Settings.COMPACT_MODE else 2
         )
-        icon_label.pack(side='left', padx=(0, 62))
+        icon_label.pack(side='left', padx=(8, 40) if Settings.COMPACT_MODE else (0, 62))
 
         # Título
         title_label = tk.Label(
@@ -350,9 +350,9 @@ class LauncherView(tk.Frame):
             font=(Theme.FONT_FAMILY, 14 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
-            width=2
+            width=0 if Settings.COMPACT_MODE else 2
         )
-        icon_label.pack(side='left', padx=(0, 62))
+        icon_label.pack(side='left', padx=(8, 40) if Settings.COMPACT_MODE else (0, 62))
 
         # Título
         title_label = tk.Label(
@@ -429,9 +429,9 @@ class LauncherView(tk.Frame):
             font=(Theme.FONT_FAMILY, 14 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
-            width=2
+            width=0 if Settings.COMPACT_MODE else 2
         )
-        icon_label.pack(side='left', padx=(0, 62))
+        icon_label.pack(side='left', padx=(8, 40) if Settings.COMPACT_MODE else (0, 62))
 
         # Título
         title_label = tk.Label(

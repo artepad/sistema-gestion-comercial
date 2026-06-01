@@ -145,20 +145,27 @@ class CashCounterView(tk.Frame):
         self.subtotals_bills[denom] = lbl_sub
 
     def create_coins_section(self, parent):
+        c = Settings.COMPACT_MODE
         frame = tk.LabelFrame(
             parent,
             text="🪙 MONEDAS",
             font=Theme.FONTS['h3'],
             bg=Theme.COINS_BG,
             fg=Theme.COINS_FG,
-            padx=10, pady=5
+            padx=4 if c else 10,
+            pady=3 if c else 5
         )
-        frame.pack(fill='x', pady=(0, 5))
-        
-        # Headers
-        headers = [("Denominación", 0, 12), ("Peso (g)", 1, 10), ("Cantidad", 2, 10), ("Valor", 3, 12)]
+        frame.pack(fill='x', pady=(0, 3) if c else (0, 5))
+
+        # Headers — anchos reducidos en modo compacto para que quepan las 4 columnas
+        if c:
+            headers = [("Denominación", 0, 9), ("Peso (g)", 1, 7), ("Cantidad", 2, 7), ("Valor", 3, 6)]
+            h_padx = 2
+        else:
+            headers = [("Denominación", 0, 12), ("Peso (g)", 1, 10), ("Cantidad", 2, 10), ("Valor", 3, 12)]
+            h_padx = 5
         for text, col, width in headers:
-            tk.Label(frame, text=text, font=Theme.FONTS['body_bold'], bg=Theme.COINS_BG, width=width).grid(row=0, column=col, padx=5, pady=2)
+            tk.Label(frame, text=text, font=Theme.FONTS['body_bold'], bg=Theme.COINS_BG, width=width).grid(row=0, column=col, padx=h_padx, pady=2)
             
         row = 1
         # 500 (Qty only)
@@ -174,26 +181,27 @@ class CashCounterView(tk.Frame):
         self.create_total_row(frame, row, "Total Monedas:", "total_coins", col_offset=1)
 
     def create_coin_qty_row(self, parent, denom, row):
-        # Label con texto negro y negrita (sin color de fondo)
+        c = Settings.COMPACT_MODE
+        # Label denominación
         lbl_denom = tk.Label(
             parent,
             text=f"${denom}",
             font=(Theme.FONT_FAMILY, 11, 'bold'),
             bg=Theme.COINS_BG,
             fg='black',
-            padx=10,
+            padx=5 if c else 10,
             pady=3,
             anchor='w',
-            width=12
+            width=9 if c else 12
         )
-        lbl_denom.grid(row=row, column=0, padx=5, pady=2, sticky='w')
+        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2, sticky='w')
 
         # Empty space for peso column (no weight for 500 peso coin)
         tk.Label(parent, text="", font=Theme.FONTS['body'], bg=Theme.COINS_BG).grid(row=row, column=1, pady=2)
 
-        entry = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+        entry = tk.Entry(parent, width=8 if c else 10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
                          validate='key', validatecommand=self._vcmd_int)
-        entry.grid(row=row, column=2, padx=5, pady=2)
+        entry.grid(row=row, column=2, padx=2 if c else 5, pady=2)
         entry.insert(0, "0")
         entry.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_qty_change(d))
         entry.bind('<FocusIn>', self.on_focus_in)
@@ -201,42 +209,43 @@ class CashCounterView(tk.Frame):
         self.entries_coins_qty[denom] = entry
 
         lbl_val = tk.Label(parent, text="$0", font=Theme.FONTS['body'], bg=Theme.COINS_BG)
-        lbl_val.grid(row=row, column=3, pady=2)
+        lbl_val.grid(row=row, column=3, padx=2 if c else 0, pady=2)
         self.labels_coins_value[denom] = lbl_val
 
     def create_coin_weight_row(self, parent, denom, row):
-        # Label con texto negro y negrita (sin color de fondo)
+        c = Settings.COMPACT_MODE
+        # Label denominación
         lbl_denom = tk.Label(
             parent,
             text=f"${denom}",
             font=(Theme.FONT_FAMILY, 11, 'bold'),
             bg=Theme.COINS_BG,
             fg='black',
-            padx=10,
+            padx=5 if c else 10,
             pady=3,
             anchor='w',
-            width=12
+            width=9 if c else 12
         )
-        lbl_denom.grid(row=row, column=0, padx=5, pady=2, sticky='w')
+        lbl_denom.grid(row=row, column=0, padx=2 if c else 5, pady=2, sticky='w')
 
-        entry_w = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+        entry_w = tk.Entry(parent, width=8 if c else 10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
                            validate='key', validatecommand=self._vcmd_decimal)
-        entry_w.grid(row=row, column=1, padx=5, pady=2)
+        entry_w.grid(row=row, column=1, padx=2 if c else 5, pady=2)
         entry_w.insert(0, "0")
         entry_w.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_weight_change(d))
         entry_w.bind('<FocusIn>', self.on_focus_in)
         self.entries_coins_weight[denom] = entry_w
 
-        entry_q = tk.Entry(parent, width=10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
+        entry_q = tk.Entry(parent, width=8 if c else 10, font=Theme.FONTS['body'], justify='center', bg=Theme.ENTRY_BG,
                            validate='key', validatecommand=self._vcmd_int)
-        entry_q.grid(row=row, column=2, padx=5, pady=2)
+        entry_q.grid(row=row, column=2, padx=2 if c else 5, pady=2)
         entry_q.insert(0, "0")
         entry_q.bind('<KeyRelease>', lambda e, d=denom: self.on_coin_qty_change(d))
         entry_q.bind('<FocusIn>', self.on_focus_in)
         self.entries_coins_qty[denom] = entry_q
-        
+
         lbl_val = tk.Label(parent, text="$0", font=Theme.FONTS['body'], bg=Theme.COINS_BG)
-        lbl_val.grid(row=row, column=3, pady=2)
+        lbl_val.grid(row=row, column=3, padx=2 if c else 0, pady=2)
         self.labels_coins_value[denom] = lbl_val
 
     def create_total_row(self, parent, row, text, attr_name, col_offset=0):

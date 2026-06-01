@@ -1,4 +1,6 @@
 import os
+import sys
+import subprocess
 import tkinter as tk
 import shutil
 from tkinter import filedialog, messagebox, ttk
@@ -1212,28 +1214,29 @@ class LauncherView(tk.Frame):
             self._compact_var.set(not enabled)
             return
 
+        # Guardar la nueva configuración
         Settings.COMPACT_MODE = enabled
-
         if enabled:
             Settings.WINDOW_WIDTH  = 520
             Settings.WINDOW_HEIGHT = 720
         else:
             Settings.WINDOW_WIDTH  = 800
             Settings.WINDOW_HEIGHT = 780
-
         Settings.save()
 
-        # Redimensionar la ventana inmediatamente
-        root = self.winfo_toplevel()
-        screen_w = root.winfo_screenwidth()
-        screen_h = root.winfo_screenheight()
-        x = (screen_w - Settings.WINDOW_WIDTH) // 2
-        y = 0 if Settings.ALIGN_TOP else (screen_h - Settings.WINDOW_HEIGHT) // 2
-        root.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")
+        # Reiniciar la aplicación
+        self._restart_app()
 
-        self._res_note.configure(
-            text="✓ Modo compacto guardado — reinicia para aplicar el diseño"
-        )
+    def _restart_app(self):
+        """Cierra la instancia actual y lanza una nueva."""
+        root = self.winfo_toplevel()
+        if getattr(sys, 'frozen', False):
+            # Ejecutable compilado con PyInstaller (.exe)
+            subprocess.Popen([sys.executable])
+        else:
+            # Modo desarrollo: relanzar con el mismo intérprete y argumentos
+            subprocess.Popen([sys.executable] + sys.argv)
+        root.destroy()
 
     def update_clock(self):
         now = datetime.now()

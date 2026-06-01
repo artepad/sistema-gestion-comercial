@@ -19,7 +19,7 @@ class Settings:
     # Available Resolutions
     AVAILABLE_RESOLUTIONS = [
         (800, 780),
-        (520, 720),   # compacto — pantallas 1366×768
+        (520, 700),   # compacto — pantallas 1366×768
         (900, 850),
         (1024, 900),
         (1280, 1024),
@@ -77,7 +77,8 @@ class Settings:
         if screen_height <= 800:
             cls.COMPACT_MODE  = True
             cls.WINDOW_WIDTH  = 520
-            cls.WINDOW_HEIGHT = 720
+            cls.WINDOW_HEIGHT = 700
+            cls.ALIGN_TOP     = True   # Evita que el borde inferior quede detrás de la barra de tareas
         else:
             cls.COMPACT_MODE  = False
             cls.WINDOW_WIDTH  = 800

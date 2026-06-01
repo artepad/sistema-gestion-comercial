@@ -62,7 +62,8 @@ class PointOfSaleView(tk.Frame):
 
         # Container principal
         padx = 8 if Settings.COMPACT_MODE else 40
-        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=10)
+        pady_m = 5 if Settings.COMPACT_MODE else 10
+        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=pady_m)
         main_container.pack(fill='both', expand=True)
 
         # Crear sistema de pestañas
@@ -89,7 +90,8 @@ class PointOfSaleView(tk.Frame):
 
     def create_header(self):
         """Crea el header en modo normal."""
-        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=70)
+        header_h = 52 if Settings.COMPACT_MODE else 70
+        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=header_h)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
 
@@ -99,7 +101,7 @@ class PointOfSaleView(tk.Frame):
         tk.Label(
             content_container,
             text="Punto de Venta",
-            font=(Theme.FONT_FAMILY, 20, 'bold'),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 20, 'bold'),
             bg=Theme.TEXT_PRIMARY,
             fg='white'
         ).pack()

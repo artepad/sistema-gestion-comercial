@@ -38,7 +38,7 @@ class PriceComparatorView(tk.Frame):
         # Container principal
         main_container = tk.Frame(self, bg=Theme.BACKGROUND)
         padx = 8 if Settings.COMPACT_MODE else 40
-        main_container.pack(fill='both', expand=True, padx=padx, pady=20)
+        main_container.pack(fill='both', expand=True, padx=padx, pady=10 if Settings.COMPACT_MODE else 20)
 
         # Sección de carga de archivos (compacta)
         self.create_file_selection_section(main_container)
@@ -65,7 +65,8 @@ class PriceComparatorView(tk.Frame):
 
     def create_header(self):
         """Crea el encabezado con fondo azul"""
-        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=70)
+        header_h = 52 if Settings.COMPACT_MODE else 70
+        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=header_h)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
 
@@ -77,7 +78,7 @@ class PriceComparatorView(tk.Frame):
         tk.Label(
             content_container,
             text='Comparador de Precios',
-            font=(Theme.FONT_FAMILY, 18, 'bold'),
+            font=(Theme.FONT_FAMILY, 15 if Settings.COMPACT_MODE else 18, 'bold'),
             bg=Theme.TEXT_PRIMARY,
             fg='white'
         ).pack()

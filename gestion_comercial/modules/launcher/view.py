@@ -86,7 +86,8 @@ class LauncherView(tk.Frame):
             subtitle_text = "Solución integral para tu negocio"
             accent_color = '#2ecc71'
 
-        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=120)
+        header_h = 95 if Settings.COMPACT_MODE else 120
+        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=header_h)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
 
@@ -98,22 +99,22 @@ class LauncherView(tk.Frame):
         tk.Label(
             header_frame,
             text=title_text,
-            font=(Theme.FONT_FAMILY, 24, 'bold'),
+            font=(Theme.FONT_FAMILY, 20 if Settings.COMPACT_MODE else 24, 'bold'),
             bg=Theme.TEXT_PRIMARY,
             fg='white'
-        ).pack(expand=True, pady=(18, 5))
+        ).pack(expand=True, pady=(6, 2) if Settings.COMPACT_MODE else (18, 5))
 
         tk.Label(
             header_frame,
             text=subtitle_text,
-            font=(Theme.FONT_FAMILY, 13),
+            font=(Theme.FONT_FAMILY, 11 if Settings.COMPACT_MODE else 13),
             bg=Theme.TEXT_PRIMARY,
             fg='#b4bcc4'
-        ).pack(pady=(0, 18))
+        ).pack(pady=(0, 6) if Settings.COMPACT_MODE else (0, 18))
 
     def create_clock_section(self):
         clock_frame = tk.Frame(self, bg=Theme.BACKGROUND)
-        clock_frame.pack(fill='x', pady=15)
+        clock_frame.pack(fill='x', pady=8 if Settings.COMPACT_MODE else 15)
 
         clock_size = 38 if Settings.COMPACT_MODE else 52
 
@@ -133,7 +134,7 @@ class LauncherView(tk.Frame):
             bg=Theme.BACKGROUND,
             fg='#6c757d'
         )
-        self.date_label.pack(pady=(8, 0))
+        self.date_label.pack(pady=(4, 0) if Settings.COMPACT_MODE else (8, 0))
 
     def create_apps_section(self):
         apps_container = tk.Frame(self, bg=Theme.BACKGROUND)
@@ -161,7 +162,7 @@ class LauncherView(tk.Frame):
         color = '#3498db'
 
         button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
-        button_container.pack(pady=8)
+        button_container.pack(pady=5 if Settings.COMPACT_MODE else 8)
 
         shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
         shadow.place(x=2, y=2, relwidth=1, relheight=1)
@@ -242,7 +243,7 @@ class LauncherView(tk.Frame):
 
         # Container principal con sombra
         button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
-        button_container.pack(pady=8)
+        button_container.pack(pady=5 if Settings.COMPACT_MODE else 8)
 
         # Sombra
         shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
@@ -321,7 +322,7 @@ class LauncherView(tk.Frame):
 
         # Container principal con sombra
         button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
-        button_container.pack(pady=8)
+        button_container.pack(pady=5 if Settings.COMPACT_MODE else 8)
 
         # Sombra
         shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
@@ -400,7 +401,7 @@ class LauncherView(tk.Frame):
 
         # Container principal con sombra
         button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
-        button_container.pack(pady=8)
+        button_container.pack(pady=5 if Settings.COMPACT_MODE else 8)
 
         # Sombra
         shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
@@ -1219,7 +1220,7 @@ class LauncherView(tk.Frame):
         Settings.COMPACT_MODE_MANUAL = True   # El usuario eligió manualmente
         if enabled:
             Settings.WINDOW_WIDTH  = 520
-            Settings.WINDOW_HEIGHT = 720
+            Settings.WINDOW_HEIGHT = 700
         else:
             Settings.WINDOW_WIDTH  = 800
             Settings.WINDOW_HEIGHT = 780

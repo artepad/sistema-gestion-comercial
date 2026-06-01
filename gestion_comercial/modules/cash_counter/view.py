@@ -37,7 +37,8 @@ class CashCounterView(tk.Frame):
         # Main Content (se expande en el espacio restante)
         content_frame = tk.Frame(self, bg=Theme.BACKGROUND)
         padx = 8 if Settings.COMPACT_MODE else 30
-        content_frame.pack(fill='both', expand=True, padx=padx, pady=(10, 5))
+        pady_c = (5, 3) if Settings.COMPACT_MODE else (10, 5)
+        content_frame.pack(fill='both', expand=True, padx=padx, pady=pady_c)
 
         # Bills Section
         self.create_bills_section(content_frame)
@@ -64,7 +65,8 @@ class CashCounterView(tk.Frame):
         accent_frame.pack_propagate(False)
 
     def create_header(self):
-        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=70)
+        header_h = 52 if Settings.COMPACT_MODE else 70
+        header_frame = tk.Frame(self, bg=Theme.TEXT_PRIMARY, height=header_h)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
 
@@ -76,7 +78,7 @@ class CashCounterView(tk.Frame):
         tk.Label(
             content_container,
             text="Contador de Caja Registradora",
-            font=(Theme.FONT_FAMILY, 20, 'bold'),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 20, 'bold'),
             bg=Theme.TEXT_PRIMARY,
             fg='white'
         ).pack()

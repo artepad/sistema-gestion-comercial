@@ -1,5 +1,6 @@
 import tkinter as tk
 from gestion_comercial.config.theme import Theme
+from gestion_comercial.config.settings import Settings
 from gestion_comercial.modules.cash_counter.model import CashCounterModel
 
 class CashCounterView(tk.Frame):
@@ -30,7 +31,8 @@ class CashCounterView(tk.Frame):
 
         # Main Content
         content_frame = tk.Frame(self, bg=Theme.BACKGROUND)
-        content_frame.pack(fill='both', expand=True, padx=30, pady=(10, 5))
+        padx = 8 if Settings.PORTRAIT_MODE else 30
+        content_frame.pack(fill='both', expand=True, padx=padx, pady=(10, 5))
 
         # Bills Section
         self.create_bills_section(content_frame)

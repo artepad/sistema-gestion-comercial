@@ -11,10 +11,12 @@ class Settings:
     WINDOW_HEIGHT = 780
     RESIZABLE = False
     ALIGN_TOP = False
+    PORTRAIT_MODE = False
 
     # Available Resolutions
     AVAILABLE_RESOLUTIONS = [
         (800, 780),
+        (520, 720),   # retrato — pantallas 1366×768
         (900, 850),
         (1024, 900),
         (1280, 1024),
@@ -33,9 +35,10 @@ class Settings:
         try:
             with open(cls.CONFIG_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            cls.WINDOW_WIDTH = data.get('window_width', cls.WINDOW_WIDTH)
+            cls.WINDOW_WIDTH  = data.get('window_width',  cls.WINDOW_WIDTH)
             cls.WINDOW_HEIGHT = data.get('window_height', cls.WINDOW_HEIGHT)
-            cls.ALIGN_TOP = data.get('align_top', cls.ALIGN_TOP)
+            cls.ALIGN_TOP     = data.get('align_top',     cls.ALIGN_TOP)
+            cls.PORTRAIT_MODE = data.get('portrait_mode', cls.PORTRAIT_MODE)
         except Exception:
             pass
 
@@ -43,9 +46,10 @@ class Settings:
     def save(cls):
         """Guarda la configuración actual en user_config.json"""
         data = {
-            'window_width': cls.WINDOW_WIDTH,
+            'window_width':  cls.WINDOW_WIDTH,
             'window_height': cls.WINDOW_HEIGHT,
-            'align_top': cls.ALIGN_TOP,
+            'align_top':     cls.ALIGN_TOP,
+            'portrait_mode': cls.PORTRAIT_MODE,
         }
         try:
             os.makedirs(os.path.dirname(cls.CONFIG_FILE), exist_ok=True)

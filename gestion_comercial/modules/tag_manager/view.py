@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import re
 from gestion_comercial.config.theme import Theme
+from gestion_comercial.config.settings import Settings
 from gestion_comercial.modules.tag_manager.model import TagManagerModel
 from gestion_comercial.modules.tag_manager.barcode_scanner import show_barcode_scanner
 
@@ -40,7 +41,8 @@ class TagManagerView(tk.Frame):
         self.create_header()
 
         # Contenedor principal con padding
-        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=40, pady=10)
+        padx = 10 if Settings.PORTRAIT_MODE else 40
+        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=10)
         main_container.pack(fill='both', expand=True)
 
         # Crear sistema de pestañas
@@ -167,13 +169,22 @@ class TagManagerView(tk.Frame):
             fg='#6b7280'
         ).pack(anchor='w', pady=(0, 8))
 
-        # Frame para los botones centrados
+        # En modo retrato: 2 botones por fila (2×2); en landscape: 4 en fila
         buttons_frame = tk.Frame(selector_frame, bg=Theme.BACKGROUND)
         buttons_frame.pack(anchor='w')
 
-        for type_key, config in self.offer_types.items():
+        if Settings.PORTRAIT_MODE:
+            row_top = tk.Frame(buttons_frame, bg=Theme.BACKGROUND)
+            row_top.pack(fill='x', pady=(0, 6))
+            row_bot = tk.Frame(buttons_frame, bg=Theme.BACKGROUND)
+            row_bot.pack(fill='x')
+            btn_rows = [row_top, row_top, row_bot, row_bot]
+        else:
+            btn_rows = [buttons_frame] * 4
+
+        for i, (type_key, config) in enumerate(self.offer_types.items()):
             btn = tk.Button(
-                buttons_frame,
+                btn_rows[i],
                 text=f"{config['icon']}  {config['label']}",
                 font=(Theme.FONT_FAMILY, 10, 'bold'),
                 bg='white',
@@ -540,9 +551,19 @@ class TagManagerView(tk.Frame):
         self.cards_frame.pack(fill='x')
 
         self.slot_cards = []
+        if Settings.PORTRAIT_MODE:
+            # Layout 2×2: dos filas de dos tarjetas
+            cards_row1 = tk.Frame(self.cards_frame, bg=Theme.BACKGROUND)
+            cards_row1.pack(fill='x', pady=(0, 6))
+            cards_row2 = tk.Frame(self.cards_frame, bg=Theme.BACKGROUND)
+            cards_row2.pack(fill='x')
+            card_parents = [cards_row1, cards_row1, cards_row2, cards_row2]
+        else:
+            card_parents = [self.cards_frame] * 4
+
         for i in range(4):
             card = tk.Frame(
-                self.cards_frame,
+                card_parents[i],
                 bg='#f8f9fa',
                 highlightbackground='#dee2e6',
                 highlightthickness=1,
@@ -1001,25 +1022,40 @@ class TagManagerView(tk.Frame):
 
     def open_barcode_scanner(self, row_index):
         """
-        Abre la ventana de escáner de código de barras para una fila específica.
-        Al cerrarse (producto encontrado o no), el foco vuelve al campo de nombre.
+        Abre el escáner de código de barras para una fila específica.
+        Si se encuentra un producto, avanza automáticamente al escáner
+        de la siguiente fila sin necesidad de usar el mouse.
+        Si no se encuentra o es la última fila, el foco queda en el campo actual.
 
         Args:
             row_index (int): Índice de la fila (0-13)
         """
+        self._scan_found = False
         scanner = show_barcode_scanner(self, row_index, self.on_product_selected)
         self.wait_window(scanner)
-        self.product_entries[row_index].focus_set()
+
+        next_row = row_index + 1
+        if self._scan_found and next_row < len(self.product_entries):
+            # Producto encontrado → avanzar al escáner de la siguiente fila
+            self.after(50, lambda: self.open_barcode_scanner(next_row))
+        else:
+            # Sin avance: foco en el campo de nombre de la fila actual
+            self.product_entries[row_index].focus_set()
 
     def on_product_selected(self, row_index, product_name, product_price):
         """
         Callback ejecutado cuando se selecciona un producto desde el escáner.
+        Rellena la fila y marca que el escaneo fue exitoso para que
+        open_barcode_scanner pueda avanzar a la siguiente fila.
 
         Args:
             row_index (int): Índice de la fila
             product_name (str): Nombre del producto
             product_price (float): Precio del producto
         """
+        # Marcar que este escaneo encontró un producto
+        self._scan_found = True
+
         # Limpiar los campos
         self.product_entries[row_index].delete(0, tk.END)
         self.price_entries[row_index].delete(0, tk.END)

@@ -113,17 +113,18 @@ class LauncherView(tk.Frame):
         clock_frame = tk.Frame(self, bg=Theme.BACKGROUND)
         clock_frame.pack(fill='x', pady=15)
 
-        # Clock with improved font
+        # Tamaño de fuente compacto en modo retrato
+        clock_size = 38 if Settings.PORTRAIT_MODE else 52
+
         self.clock_label = tk.Label(
             clock_frame,
             text="00:00:00",
-            font=(Theme.FONT_FAMILY, 52, 'bold'),
+            font=(Theme.FONT_FAMILY, clock_size, 'bold'),
             bg=Theme.BACKGROUND,
             fg=Theme.TEXT_PRIMARY
         )
         self.clock_label.pack()
 
-        # Date with better styling
         self.date_label = tk.Label(
             clock_frame,
             text="",
@@ -135,7 +136,8 @@ class LauncherView(tk.Frame):
 
     def create_apps_section(self):
         apps_container = tk.Frame(self, bg=Theme.BACKGROUND)
-        apps_container.pack(fill='both', expand=True, padx=80, pady=(10, 20))
+        padx = 15 if Settings.PORTRAIT_MODE else 80
+        apps_container.pack(fill='both', expand=True, padx=padx, pady=(10, 20))
 
         # Container vertical centrado para botones
         buttons_container = tk.Frame(apps_container, bg=Theme.BACKGROUND)
@@ -155,17 +157,14 @@ class LauncherView(tk.Frame):
 
     def create_tag_manager_button(self, parent):
         """Crea el botón de Gestor de Etiquetas."""
-        color = '#3498db'   
+        color = '#3498db'
 
-        # Container principal con sombra
         button_container = tk.Frame(parent, bg=Theme.BACKGROUND)
         button_container.pack(pady=8)
 
-        # Sombra
         shadow = tk.Frame(button_container, bg='#c8d0d8', bd=0)
         shadow.place(x=2, y=2, relwidth=1, relheight=1)
 
-        # Botón principal rectangular
         button_frame = tk.Frame(
             button_container,
             bg='white',
@@ -176,15 +175,12 @@ class LauncherView(tk.Frame):
         )
         button_frame.pack()
 
-        # Frame interior con padding
         inner_frame = tk.Frame(button_frame, bg='white')
         inner_frame.pack(fill='both', expand=True, padx=25, pady=18)
 
-        # Container para el icono (permite posicionamiento absoluto)
         icon_container = tk.Frame(inner_frame, bg='white')
         icon_container.pack(side='left', padx=(0, 15))
 
-        # Icono del emoji
         icon_emoji = tk.Label(
             icon_container,
             text="🏷️",
@@ -194,7 +190,6 @@ class LauncherView(tk.Frame):
         )
         icon_emoji.pack()
 
-        # Título
         title_label = tk.Label(
             inner_frame,
             text="Gestor de Etiquetas",
@@ -205,8 +200,10 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        # Tamaño fijo
-        button_frame.config(width=420, height=77)
+        # Tamaño adaptado al modo
+        btn_w = 370 if Settings.PORTRAIT_MODE else 420
+        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
         # Hacer clickeable
@@ -287,11 +284,11 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        # Tamaño fijo
-        button_frame.config(width=420, height=77)
+        btn_w = 370 if Settings.PORTRAIT_MODE else 420
+        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
-        # Hacer clickeable
         command = lambda: self.navigator.show_view('cash_counter')
         widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
         for widget in widgets:
@@ -366,11 +363,11 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        # Tamaño fijo
-        button_frame.config(width=420, height=77)
+        btn_w = 370 if Settings.PORTRAIT_MODE else 420
+        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
-        # Hacer clickeable
         command = lambda: self.navigator.show_view('point_of_sale')
         widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
         for widget in widgets:
@@ -445,11 +442,11 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        # Tamaño fijo
-        button_frame.config(width=420, height=77)
+        btn_w = 370 if Settings.PORTRAIT_MODE else 420
+        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
-        # Hacer clickeable
         command = lambda: self.navigator.show_view('price_comparator')
         widgets = [button_container, shadow, button_frame, inner_frame, icon_label, title_label]
         for widget in widgets:
@@ -982,6 +979,34 @@ class LauncherView(tk.Frame):
             anchor='w'
         ).pack(fill='x', padx=(22, 0))
 
+        # Separador
+        tk.Frame(screen_section, bg='#e5e7eb', height=1).pack(fill='x', pady=(10, 6))
+
+        # Modo retrato checkbox
+        self._portrait_var = tk.BooleanVar(value=Settings.PORTRAIT_MODE)
+        portrait_check = tk.Checkbutton(
+            screen_section,
+            text="Modo retrato — ventana 520×720 para pantallas pequeñas",
+            variable=self._portrait_var,
+            font=(Theme.FONT_FAMILY, 10),
+            bg=Theme.BACKGROUND,
+            fg=Theme.TEXT_PRIMARY,
+            activebackground=Theme.BACKGROUND,
+            selectcolor='white',
+            cursor='hand2',
+            command=self._on_portrait_mode_change
+        )
+        portrait_check.pack(fill='x', pady=(0, 2), anchor='w')
+
+        tk.Label(
+            screen_section,
+            text="Recomendado para pantallas 1366×768 donde los botones inferiores quedan cortados",
+            font=(Theme.FONT_FAMILY, 8, 'italic'),
+            bg=Theme.BACKGROUND,
+            fg='#95a5a6',
+            anchor='w'
+        ).pack(fill='x', padx=(22, 0))
+
         # === Acerca del Sistema ===
         about_section = tk.LabelFrame(
             content_frame,
@@ -1170,6 +1195,32 @@ class LauncherView(tk.Frame):
         root.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")
 
         self._res_note.configure(text="✓ Configuración guardada")
+
+    def _on_portrait_mode_change(self):
+        """Activa o desactiva el modo retrato (520×720) para pantallas pequeñas."""
+        enabled = self._portrait_var.get()
+        Settings.PORTRAIT_MODE = enabled
+
+        if enabled:
+            Settings.WINDOW_WIDTH  = 520
+            Settings.WINDOW_HEIGHT = 720
+        else:
+            Settings.WINDOW_WIDTH  = 800
+            Settings.WINDOW_HEIGHT = 780
+
+        Settings.save()
+
+        # Redimensionar la ventana inmediatamente
+        root = self.winfo_toplevel()
+        screen_w = root.winfo_screenwidth()
+        screen_h = root.winfo_screenheight()
+        x = (screen_w - Settings.WINDOW_WIDTH) // 2
+        y = 0 if Settings.ALIGN_TOP else (screen_h - Settings.WINDOW_HEIGHT) // 2
+        root.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")
+
+        self._res_note.configure(
+            text="✓ Guardado — reinicia la app para aplicar el diseño completo"
+        )
 
     def update_clock(self):
         now = datetime.now()

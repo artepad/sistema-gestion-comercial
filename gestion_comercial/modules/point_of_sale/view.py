@@ -61,7 +61,8 @@ class PointOfSaleView(tk.Frame):
         self.create_header()
 
         # Container principal
-        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=40, pady=10)
+        padx = 8 if Settings.PORTRAIT_MODE else 40
+        main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=10)
         main_container.pack(fill='both', expand=True)
 
         # Crear sistema de pestañas
@@ -279,11 +280,18 @@ class PointOfSaleView(tk.Frame):
         self.cart_tree.heading('unit_price', text='P. Unitario')
         self.cart_tree.heading('subtotal', text='Subtotal')
 
-        self.cart_tree.column('code', width=100, minwidth=80)
-        self.cart_tree.column('product', width=250, minwidth=150)
-        self.cart_tree.column('qty', width=55, minwidth=45, anchor='center')
-        self.cart_tree.column('unit_price', width=95, minwidth=75, anchor='e')
-        self.cart_tree.column('subtotal', width=95, minwidth=75, anchor='e')
+        if Settings.PORTRAIT_MODE:
+            self.cart_tree.column('code',       width=60,  minwidth=50)
+            self.cart_tree.column('product',    width=120, minwidth=90)
+            self.cart_tree.column('qty',        width=45,  minwidth=35, anchor='center')
+            self.cart_tree.column('unit_price', width=70,  minwidth=55, anchor='e')
+            self.cart_tree.column('subtotal',   width=70,  minwidth=55, anchor='e')
+        else:
+            self.cart_tree.column('code',       width=100, minwidth=80)
+            self.cart_tree.column('product',    width=250, minwidth=150)
+            self.cart_tree.column('qty',        width=55,  minwidth=45, anchor='center')
+            self.cart_tree.column('unit_price', width=95,  minwidth=75, anchor='e')
+            self.cart_tree.column('subtotal',   width=95,  minwidth=75, anchor='e')
 
         # Tags para filas alternadas (zebra)
         self.cart_tree.tag_configure('even', background='#f8f9fa')
@@ -412,7 +420,7 @@ class PointOfSaleView(tk.Frame):
         popup.configure(bg=Theme.BACKGROUND)
         popup.resizable(False, False)
 
-        window_width = 420
+        window_width  = 340 if Settings.PORTRAIT_MODE else 420
         window_height = 320
         root = self.winfo_toplevel()
         root_x = root.winfo_x()

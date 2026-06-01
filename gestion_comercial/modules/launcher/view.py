@@ -1215,7 +1215,8 @@ class LauncherView(tk.Frame):
             return
 
         # Guardar la nueva configuración
-        Settings.COMPACT_MODE = enabled
+        Settings.COMPACT_MODE        = enabled
+        Settings.COMPACT_MODE_MANUAL = True   # El usuario eligió manualmente
         if enabled:
             Settings.WINDOW_WIDTH  = 520
             Settings.WINDOW_HEIGHT = 720

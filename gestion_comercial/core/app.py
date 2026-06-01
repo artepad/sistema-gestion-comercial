@@ -21,8 +21,11 @@ class MainApp(tk.Tk):
         self.configure(bg=Theme.BACKGROUND)
 
         # Calcular posición centrada ANTES de mostrar la ventana
-        screen_width = self.winfo_screenwidth()
+        screen_width  = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
+
+        # Auto-detectar modo compacto si el usuario nunca lo configuró manualmente
+        Settings.auto_detect_compact_mode(screen_height)
 
         x = (screen_width - Settings.WINDOW_WIDTH) // 2
         if Settings.ALIGN_TOP:

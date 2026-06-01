@@ -12,7 +12,7 @@ OutputBaseFilename=Instalador_SistemaGestion_v3.0.5
 Compression=lzma
 SolidCompression=yes
 DisableProgramGroupPage=yes
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"

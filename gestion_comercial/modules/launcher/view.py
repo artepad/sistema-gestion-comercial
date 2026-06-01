@@ -1198,6 +1198,20 @@ class LauncherView(tk.Frame):
     def _on_compact_mode_change(self):
         """Activa o desactiva el modo compacto (520×720) para pantallas pequeñas."""
         enabled = self._compact_var.get()
+
+        # Pedir confirmación antes de aplicar el cambio
+        confirm = messagebox.askyesno(
+            "Cambio de modo de visualización",
+            "Para aplicar este cambio es necesario reiniciar la aplicación.\n\n"
+            "¿Desea continuar?",
+            parent=self.winfo_toplevel()
+        )
+
+        if not confirm:
+            # Revertir el checkbox al estado anterior
+            self._compact_var.set(not enabled)
+            return
+
         Settings.COMPACT_MODE = enabled
 
         if enabled:

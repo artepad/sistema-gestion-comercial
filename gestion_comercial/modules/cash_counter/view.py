@@ -246,16 +246,19 @@ class CashCounterView(tk.Frame):
         setattr(self, attr_name, lbl)
 
     def create_totals_section(self, parent):
+        # En modo compacto se omite el título para ahorrar espacio vertical
+        frame_text = "" if Settings.COMPACT_MODE else "💯 TOTAL GENERAL"
         frame = tk.LabelFrame(
             parent,
-            text="💯 TOTAL GENERAL",
+            text=frame_text,
             font=Theme.FONTS['h2'],
             bg=Theme.TOTAL_BG,
             fg=Theme.TOTAL_FG,
-            padx=10, pady=5
+            padx=10,
+            pady=2 if Settings.COMPACT_MODE else 5
         )
-        frame.pack(fill='x', pady=(0, 5))
-        
+        frame.pack(fill='x', pady=(0, 3) if Settings.COMPACT_MODE else (0, 5))
+
         self.total_general = tk.Label(
             frame,
             text="$0",
@@ -263,7 +266,7 @@ class CashCounterView(tk.Frame):
             fg=Theme.TOTAL_TEXT,
             bg=Theme.TOTAL_BG
         )
-        self.total_general.pack()
+        self.total_general.pack(pady=(2, 0) if Settings.COMPACT_MODE else 0)
 
     def create_action_buttons(self, parent):
         frame = tk.Frame(parent, bg=Theme.BACKGROUND)

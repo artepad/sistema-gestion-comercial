@@ -159,7 +159,7 @@ class CashCounterView(tk.Frame):
 
         # Headers — anchos reducidos en modo compacto para que quepan las 4 columnas
         if c:
-            headers = [("Denominación", 0, 9), ("Peso (g)", 1, 7), ("Cantidad", 2, 7), ("Valor", 3, 6)]
+            headers = [("Moneda", 0, 9), ("Peso (g)", 1, 7), ("Cantidad", 2, 7), ("Valor", 3, 6)]
             h_padx = 2
         else:
             headers = [("Denominación", 0, 12), ("Peso (g)", 1, 10), ("Cantidad", 2, 10), ("Valor", 3, 12)]

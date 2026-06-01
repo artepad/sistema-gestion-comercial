@@ -155,14 +155,14 @@ class CashCounterView(tk.Frame):
             padx=4 if c else 10,
             pady=3 if c else 5
         )
-        frame.pack(fill='x', pady=(0, 3) if c else (0, 5))
+        frame.pack(fill='x', pady=(0, 8) if c else (0, 5))
 
         # Headers — anchos reducidos en modo compacto para que quepan las 4 columnas
         if c:
-            headers = [("Moneda", 0, 9), ("Peso (g)", 1, 7), ("Cantidad", 2, 7), ("Valor", 3, 6)]
+            headers = [("Moneda", 0, 9), ("Peso (g)", 1, 7), ("Cantidad", 2, 7), ("Subtotal", 3, 6)]
             h_padx = 2
         else:
-            headers = [("Denominación", 0, 12), ("Peso (g)", 1, 10), ("Cantidad", 2, 10), ("Valor", 3, 12)]
+            headers = [("Denominación", 0, 12), ("Peso (g)", 1, 10), ("Cantidad", 2, 10), ("Subtotal", 3, 12)]
             h_padx = 5
         for text, col, width in headers:
             tk.Label(frame, text=text, font=Theme.FONTS['body_bold'], bg=Theme.COINS_BG, width=width).grid(row=0, column=col, padx=h_padx, pady=2)

@@ -61,7 +61,7 @@ class PointOfSaleView(tk.Frame):
         self.create_header()
 
         # Container principal
-        padx = 8 if Settings.PORTRAIT_MODE else 40
+        padx = 8 if Settings.COMPACT_MODE else 40
         main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=10)
         main_container.pack(fill='both', expand=True)
 
@@ -280,7 +280,7 @@ class PointOfSaleView(tk.Frame):
         self.cart_tree.heading('unit_price', text='P. Unitario')
         self.cart_tree.heading('subtotal', text='Subtotal')
 
-        if Settings.PORTRAIT_MODE:
+        if Settings.COMPACT_MODE:
             self.cart_tree.column('code',       width=60,  minwidth=50)
             self.cart_tree.column('product',    width=120, minwidth=90)
             self.cart_tree.column('qty',        width=45,  minwidth=35, anchor='center')
@@ -420,7 +420,7 @@ class PointOfSaleView(tk.Frame):
         popup.configure(bg=Theme.BACKGROUND)
         popup.resizable(False, False)
 
-        window_width  = 340 if Settings.PORTRAIT_MODE else 420
+        window_width  = 340 if Settings.COMPACT_MODE else 420
         window_height = 320
         root = self.winfo_toplevel()
         root_x = root.winfo_x()

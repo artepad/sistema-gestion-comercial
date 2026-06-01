@@ -113,8 +113,7 @@ class LauncherView(tk.Frame):
         clock_frame = tk.Frame(self, bg=Theme.BACKGROUND)
         clock_frame.pack(fill='x', pady=15)
 
-        # Tamaño de fuente compacto en modo retrato
-        clock_size = 38 if Settings.PORTRAIT_MODE else 52
+        clock_size = 38 if Settings.COMPACT_MODE else 52
 
         self.clock_label = tk.Label(
             clock_frame,
@@ -136,7 +135,7 @@ class LauncherView(tk.Frame):
 
     def create_apps_section(self):
         apps_container = tk.Frame(self, bg=Theme.BACKGROUND)
-        padx = 15 if Settings.PORTRAIT_MODE else 80
+        padx = 15 if Settings.COMPACT_MODE else 80
         apps_container.pack(fill='both', expand=True, padx=padx, pady=(10, 20))
 
         # Container vertical centrado para botones
@@ -184,7 +183,7 @@ class LauncherView(tk.Frame):
         icon_emoji = tk.Label(
             icon_container,
             text="🏷️",
-            font=(Theme.FONT_FAMILY, 22),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color
         )
@@ -201,8 +200,8 @@ class LauncherView(tk.Frame):
         title_label.pack(side='left', fill='both', expand=True)
 
         # Tamaño adaptado al modo
-        btn_w = 370 if Settings.PORTRAIT_MODE else 420
-        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        btn_w = 370 if Settings.COMPACT_MODE else 420
+        btn_h = 65  if Settings.COMPACT_MODE else 77
         button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
@@ -266,7 +265,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="💰",
-            font=(Theme.FONT_FAMILY, 22),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=2
@@ -284,8 +283,8 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        btn_w = 370 if Settings.PORTRAIT_MODE else 420
-        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        btn_w = 370 if Settings.COMPACT_MODE else 420
+        btn_h = 65  if Settings.COMPACT_MODE else 77
         button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
@@ -345,7 +344,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="🛒",
-            font=(Theme.FONT_FAMILY, 22),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=2
@@ -363,8 +362,8 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        btn_w = 370 if Settings.PORTRAIT_MODE else 420
-        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        btn_w = 370 if Settings.COMPACT_MODE else 420
+        btn_h = 65  if Settings.COMPACT_MODE else 77
         button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
@@ -424,7 +423,7 @@ class LauncherView(tk.Frame):
         icon_label = tk.Label(
             inner_frame,
             text="⚖️",
-            font=(Theme.FONT_FAMILY, 22),
+            font=(Theme.FONT_FAMILY, 16 if Settings.COMPACT_MODE else 22),
             bg='white',
             fg=color,
             width=2
@@ -442,8 +441,8 @@ class LauncherView(tk.Frame):
         )
         title_label.pack(side='left', fill='both', expand=True)
 
-        btn_w = 370 if Settings.PORTRAIT_MODE else 420
-        btn_h = 65  if Settings.PORTRAIT_MODE else 77
+        btn_w = 370 if Settings.COMPACT_MODE else 420
+        btn_h = 65  if Settings.COMPACT_MODE else 77
         button_frame.config(width=btn_w, height=btn_h)
         button_frame.pack_propagate(False)
 
@@ -982,21 +981,21 @@ class LauncherView(tk.Frame):
         # Separador
         tk.Frame(screen_section, bg='#e5e7eb', height=1).pack(fill='x', pady=(10, 6))
 
-        # Modo retrato checkbox
-        self._portrait_var = tk.BooleanVar(value=Settings.PORTRAIT_MODE)
-        portrait_check = tk.Checkbutton(
+        # Modo compacto checkbox
+        self._compact_var = tk.BooleanVar(value=Settings.COMPACT_MODE)
+        compact_check = tk.Checkbutton(
             screen_section,
-            text="Modo retrato — ventana 520×720 para pantallas pequeñas",
-            variable=self._portrait_var,
+            text="Modo compacto — ventana 520×720 para pantallas pequeñas",
+            variable=self._compact_var,
             font=(Theme.FONT_FAMILY, 10),
             bg=Theme.BACKGROUND,
             fg=Theme.TEXT_PRIMARY,
             activebackground=Theme.BACKGROUND,
             selectcolor='white',
             cursor='hand2',
-            command=self._on_portrait_mode_change
+            command=self._on_compact_mode_change
         )
-        portrait_check.pack(fill='x', pady=(0, 2), anchor='w')
+        compact_check.pack(fill='x', pady=(0, 2), anchor='w')
 
         tk.Label(
             screen_section,
@@ -1196,10 +1195,10 @@ class LauncherView(tk.Frame):
 
         self._res_note.configure(text="✓ Configuración guardada")
 
-    def _on_portrait_mode_change(self):
-        """Activa o desactiva el modo retrato (520×720) para pantallas pequeñas."""
-        enabled = self._portrait_var.get()
-        Settings.PORTRAIT_MODE = enabled
+    def _on_compact_mode_change(self):
+        """Activa o desactiva el modo compacto (520×720) para pantallas pequeñas."""
+        enabled = self._compact_var.get()
+        Settings.COMPACT_MODE = enabled
 
         if enabled:
             Settings.WINDOW_WIDTH  = 520
@@ -1219,7 +1218,7 @@ class LauncherView(tk.Frame):
         root.geometry(f"{Settings.WINDOW_WIDTH}x{Settings.WINDOW_HEIGHT}+{x}+{y}")
 
         self._res_note.configure(
-            text="✓ Guardado — reinicia la app para aplicar el diseño completo"
+            text="✓ Modo compacto guardado — reinicia para aplicar el diseño"
         )
 
     def update_clock(self):

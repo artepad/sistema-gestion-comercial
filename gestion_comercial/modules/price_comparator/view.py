@@ -37,7 +37,7 @@ class PriceComparatorView(tk.Frame):
 
         # Container principal
         main_container = tk.Frame(self, bg=Theme.BACKGROUND)
-        padx = 8 if Settings.PORTRAIT_MODE else 40
+        padx = 8 if Settings.COMPACT_MODE else 40
         main_container.pack(fill='both', expand=True, padx=padx, pady=20)
 
         # Sección de carga de archivos (compacta)
@@ -349,7 +349,7 @@ class PriceComparatorView(tk.Frame):
         self.results_tree.heading('difference', text='Diferencia')
         self.results_tree.heading('status', text='Estado')
 
-        if Settings.PORTRAIT_MODE:
+        if Settings.COMPACT_MODE:
             self.results_tree.column('barcode',     width=60,  anchor='center')
             self.results_tree.column('name',        width=100, anchor='w')
             self.results_tree.column('main_price',  width=75,  anchor='e')

@@ -29,9 +29,14 @@ class CashCounterView(tk.Frame):
         # Header with Back Button
         self.create_header()
 
-        # Main Content
+        # Franja azul + botones se anclan al fondo ANTES del contenido expandido,
+        # de lo contrario content_frame con expand=True no les deja espacio.
+        self.create_bottom_accent()
+        self.create_action_buttons(self)
+
+        # Main Content (se expande en el espacio restante)
         content_frame = tk.Frame(self, bg=Theme.BACKGROUND)
-        padx = 8 if Settings.PORTRAIT_MODE else 30
+        padx = 8 if Settings.COMPACT_MODE else 30
         content_frame.pack(fill='both', expand=True, padx=padx, pady=(10, 5))
 
         # Bills Section
@@ -43,14 +48,8 @@ class CashCounterView(tk.Frame):
         # Totals Section
         self.create_totals_section(content_frame)
 
-        # Action Buttons
-        self.create_action_buttons(content_frame)
-
         # Vincular Enter para navegar entre campos
         self._bind_enter_navigation()
-
-        # Bottom blue accent strip
-        self.create_bottom_accent()
         
     def create_top_accent(self):
         """Creates the top green accent strip matching the launcher"""
@@ -266,7 +265,7 @@ class CashCounterView(tk.Frame):
 
     def create_action_buttons(self, parent):
         frame = tk.Frame(parent, bg=Theme.BACKGROUND)
-        frame.pack(pady=5)
+        frame.pack(side='bottom', pady=5)
 
         # Back Button (Blue theme)
         self.create_styled_button(

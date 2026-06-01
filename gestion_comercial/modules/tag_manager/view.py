@@ -41,7 +41,7 @@ class TagManagerView(tk.Frame):
         self.create_header()
 
         # Contenedor principal con padding
-        padx = 10 if Settings.PORTRAIT_MODE else 40
+        padx = 10 if Settings.COMPACT_MODE else 40
         main_container = tk.Frame(self, bg=Theme.BACKGROUND, padx=padx, pady=10)
         main_container.pack(fill='both', expand=True)
 
@@ -158,7 +158,8 @@ class TagManagerView(tk.Frame):
     def create_offer_type_selector(self, parent):
         """Crea la fila de botones para seleccionar el tipo de oferta"""
         selector_frame = tk.Frame(parent, bg=Theme.BACKGROUND)
-        selector_frame.pack(fill='x', pady=(8, 12))
+        pady = (4, 6) if Settings.COMPACT_MODE else (8, 12)
+        selector_frame.pack(fill='x', pady=pady)
 
         # Título con estilo consistente
         tk.Label(
@@ -169,22 +170,20 @@ class TagManagerView(tk.Frame):
             fg='#6b7280'
         ).pack(anchor='w', pady=(0, 8))
 
-        # En modo retrato: 2 botones por fila (2×2); en landscape: 4 en fila
+        # En modo compacto: 2 botones por fila (2×2) con ancho parejo usando grid
+        # En modo normal: 4 botones en una sola fila con pack
         buttons_frame = tk.Frame(selector_frame, bg=Theme.BACKGROUND)
-        buttons_frame.pack(anchor='w')
+        buttons_frame.pack(fill='x')
 
-        if Settings.PORTRAIT_MODE:
-            row_top = tk.Frame(buttons_frame, bg=Theme.BACKGROUND)
-            row_top.pack(fill='x', pady=(0, 6))
-            row_bot = tk.Frame(buttons_frame, bg=Theme.BACKGROUND)
-            row_bot.pack(fill='x')
-            btn_rows = [row_top, row_top, row_bot, row_bot]
-        else:
-            btn_rows = [buttons_frame] * 4
+        if Settings.COMPACT_MODE:
+            buttons_frame.grid_columnconfigure(0, weight=1)
+            buttons_frame.grid_columnconfigure(1, weight=1)
+            # posiciones (fila, columna) para cada tipo
+            grid_positions = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
         for i, (type_key, config) in enumerate(self.offer_types.items()):
             btn = tk.Button(
-                btn_rows[i],
+                buttons_frame,
                 text=f"{config['icon']}  {config['label']}",
                 font=(Theme.FONT_FAMILY, 10, 'bold'),
                 bg='white',
@@ -200,7 +199,13 @@ class TagManagerView(tk.Frame):
                 activeforeground='white',
                 command=lambda k=type_key: self.select_offer_type(k)
             )
-            btn.pack(side='left', padx=(0, 10))
+            if Settings.COMPACT_MODE:
+                r, c = grid_positions[i]
+                padx = (0, 4) if c == 0 else (4, 0)
+                pady = (0, 6) if r == 0 else (0, 0)
+                btn.grid(row=r, column=c, sticky='ew', padx=padx, pady=pady)
+            else:
+                btn.pack(side='left', padx=(0, 10))
             self.type_buttons[type_key] = btn
 
             # Hover
@@ -248,7 +253,8 @@ class TagManagerView(tk.Frame):
             padx=20,
             pady=12
         )
-        self.form_outer.pack(fill='x', pady=(0, 15))
+        form_pady = (0, 8) if Settings.COMPACT_MODE else (0, 15)
+        self.form_outer.pack(fill='x', pady=form_pady)
 
         # Contenedor interno para apilar formularios con grid
         self.form_container = tk.Frame(self.form_outer, bg='white')
@@ -551,26 +557,28 @@ class TagManagerView(tk.Frame):
         self.cards_frame.pack(fill='x')
 
         self.slot_cards = []
-        if Settings.PORTRAIT_MODE:
-            # Layout 2×2: dos filas de dos tarjetas
-            cards_row1 = tk.Frame(self.cards_frame, bg=Theme.BACKGROUND)
-            cards_row1.pack(fill='x', pady=(0, 6))
-            cards_row2 = tk.Frame(self.cards_frame, bg=Theme.BACKGROUND)
-            cards_row2.pack(fill='x')
-            card_parents = [cards_row1, cards_row1, cards_row2, cards_row2]
-        else:
-            card_parents = [self.cards_frame] * 4
+        if Settings.COMPACT_MODE:
+            # Grid 2×2: más fiable que filas de pack para garantizar altura
+            self.cards_frame.grid_columnconfigure(0, weight=1)
+            self.cards_frame.grid_columnconfigure(1, weight=1)
+            grid_positions = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
         for i in range(4):
             card = tk.Frame(
-                card_parents[i],
+                self.cards_frame,
                 bg='#f8f9fa',
                 highlightbackground='#dee2e6',
                 highlightthickness=1,
                 width=155,
-                height=80
+                height=45 if Settings.COMPACT_MODE else 80
             )
-            card.pack(side='left', padx=(0, 10), expand=True)
+            if Settings.COMPACT_MODE:
+                r, c = grid_positions[i]
+                padx = (0, 4) if c == 0 else (4, 0)
+                pady = (0, 6) if r == 0 else (0, 0)
+                card.grid(row=r, column=c, sticky='ew', padx=padx, pady=pady)
+            else:
+                card.pack(side='left', padx=(0, 10), expand=True)
             card.pack_propagate(False)
             self.slot_cards.append(card)
 
@@ -597,14 +605,13 @@ class TagManagerView(tk.Frame):
                 card.configure(bg='white', highlightbackground=color, highlightthickness=2)
 
                 # Barra superior de color
-                color_bar = tk.Frame(card, bg=color, height=4)
-                color_bar.pack(fill='x')
+                tk.Frame(card, bg=color, height=4).pack(fill='x')
 
                 # Contenido
                 content = tk.Frame(card, bg='white')
                 content.pack(fill='both', expand=True, padx=6, pady=3)
 
-                # Tipo + botón eliminar
+                # Fila: ícono + tipo + botón eliminar (siempre visible)
                 top_row = tk.Frame(content, bg='white')
                 top_row.pack(fill='x')
                 tk.Label(
@@ -615,39 +622,32 @@ class TagManagerView(tk.Frame):
                 ).pack(side='left')
 
                 remove_btn = tk.Label(
-                    top_row,
-                    text="✕",
+                    top_row, text="✕",
                     font=(Theme.FONT_FAMILY, 10, 'bold'),
-                    bg='white', fg='#adb5bd',
-                    cursor='hand2'
+                    bg='white', fg='#adb5bd', cursor='hand2'
                 )
                 remove_btn.pack(side='right')
-                # Hover en el botón eliminar
                 remove_btn.bind("<Enter>", lambda e, b=remove_btn: b.configure(fg='#e74c3c'))
                 remove_btn.bind("<Leave>", lambda e, b=remove_btn: b.configure(fg='#adb5bd'))
                 remove_btn.bind("<Button-1>", lambda e, idx=i: self.remove_offer_from_queue(idx))
 
-                # Nombre del producto (truncado)
-                product_name = offer['product']
-                if len(product_name) > 18:
-                    product_name = product_name[:16] + "..."
-                tk.Label(
-                    content,
-                    text=product_name,
-                    font=(Theme.FONT_FAMILY, 8),
-                    bg='white', fg=Theme.TEXT_PRIMARY,
-                    anchor='w'
-                ).pack(fill='x')
+                # En modo compacto: solo tipo — sin producto ni precio para ahorrar espacio
+                if not Settings.COMPACT_MODE:
+                    product_name = offer['product']
+                    if len(product_name) > 18:
+                        product_name = product_name[:16] + "..."
+                    tk.Label(
+                        content, text=product_name,
+                        font=(Theme.FONT_FAMILY, 8),
+                        bg='white', fg=Theme.TEXT_PRIMARY, anchor='w'
+                    ).pack(fill='x')
 
-                # Detalle de precio
-                price_text = self._get_offer_price_text(offer)
-                tk.Label(
-                    content,
-                    text=price_text,
-                    font=(Theme.FONT_FAMILY, 9, 'bold'),
-                    bg='white', fg='#27ae60',
-                    anchor='w'
-                ).pack(fill='x')
+                    price_text = self._get_offer_price_text(offer)
+                    tk.Label(
+                        content, text=price_text,
+                        font=(Theme.FONT_FAMILY, 9, 'bold'),
+                        bg='white', fg='#27ae60', anchor='w'
+                    ).pack(fill='x')
 
             else:
                 # Slot vacío
@@ -655,14 +655,12 @@ class TagManagerView(tk.Frame):
                 empty_frame = tk.Frame(card, bg='#f8f9fa')
                 empty_frame.place(relx=0.5, rely=0.5, anchor='center')
                 tk.Label(
-                    empty_frame,
-                    text=f"{i + 1}",
-                    font=(Theme.FONT_FAMILY, 14, 'bold'),
+                    empty_frame, text=f"{i + 1}",
+                    font=(Theme.FONT_FAMILY, 12 if Settings.COMPACT_MODE else 14, 'bold'),
                     bg='#f8f9fa', fg='#dee2e6'
                 ).pack()
                 tk.Label(
-                    empty_frame,
-                    text="Disponible",
+                    empty_frame, text="Disponible",
                     font=(Theme.FONT_FAMILY, 8),
                     bg='#f8f9fa', fg='#bdc3c7'
                 ).pack()

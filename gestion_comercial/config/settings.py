@@ -11,12 +11,12 @@ class Settings:
     WINDOW_HEIGHT = 780
     RESIZABLE = False
     ALIGN_TOP = False
-    PORTRAIT_MODE = False
+    COMPACT_MODE = False
 
     # Available Resolutions
     AVAILABLE_RESOLUTIONS = [
         (800, 780),
-        (520, 720),   # retrato — pantallas 1366×768
+        (520, 720),   # compacto — pantallas 1366×768
         (900, 850),
         (1024, 900),
         (1280, 1024),
@@ -38,7 +38,8 @@ class Settings:
             cls.WINDOW_WIDTH  = data.get('window_width',  cls.WINDOW_WIDTH)
             cls.WINDOW_HEIGHT = data.get('window_height', cls.WINDOW_HEIGHT)
             cls.ALIGN_TOP     = data.get('align_top',     cls.ALIGN_TOP)
-            cls.PORTRAIT_MODE = data.get('portrait_mode', cls.PORTRAIT_MODE)
+            # Leer clave nueva; si no existe, intentar con la clave antigua (portrait_mode)
+            cls.COMPACT_MODE = data.get('compact_mode', data.get('portrait_mode', cls.COMPACT_MODE))
         except Exception:
             pass
 
@@ -49,7 +50,7 @@ class Settings:
             'window_width':  cls.WINDOW_WIDTH,
             'window_height': cls.WINDOW_HEIGHT,
             'align_top':     cls.ALIGN_TOP,
-            'portrait_mode': cls.PORTRAIT_MODE,
+            'compact_mode':  cls.COMPACT_MODE,
         }
         try:
             os.makedirs(os.path.dirname(cls.CONFIG_FILE), exist_ok=True)
